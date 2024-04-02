@@ -20,8 +20,8 @@ class GameSprite(pg.sprite.Sprite):
     def reset(self):
         pg.draw.polygon(window, self.col, (self.point1, self.point2, self.point3, self.point4, self.point5, self.point6))
 
-win_width = 1200
-win_height = 700
+win_width = 1280
+win_height = 720
 window = pg.display.set_mode((win_width, win_height))
 pg.display.set_caption("Maze")
 window.fill((200, 255, 255))
@@ -32,12 +32,14 @@ a = 30
 
 dots = []
 
-for i in range(30):
+map_width = 5
+
+for i in range(90):
     col = (randint(0, 255), randint(0, 255), randint(0, 255))
-    if (i // 5) % 1 == 0 and (i // 5) % 2 == 1:
-        dot = GameSprite(x + (a * 3 * (i % 5)) + (a * 1.5), y + ((a * (3 ** 0.5)) / 2) * (i // 5), a, col)
+    if (i // map_width) % 1 == 0 and (i // map_width) % 2 == 1:
+        dot = GameSprite(x + (a * 3 * (i % map_width)) + (a * 1.5), y + ((a * (3 ** 0.5)) / 2) * (i // map_width), a, col)
     else:
-        dot = GameSprite(x + (a * 3 * (i % 5)), y + ((a * (3 ** 0.5)) / 2) * (i // 5), a, col)
+        dot = GameSprite(x + (a * 3 * (i % map_width)), y + ((a * (3 ** 0.5)) / 2) * (i // map_width), a, col)
     dots.append(dot)
 
 game = True
