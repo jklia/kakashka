@@ -1,0 +1,56 @@
+import pygame as pg
+from random import randint
+
+
+class GameSprite(pg.sprite.Sprite):
+
+    def __init__(self, x, y, a, col):
+        super().__init__()
+        self.x = x
+        self.y = y
+        self.a = a
+        self.col = col
+        self.point1 = (x + a, y)
+        self.point4 = (x - a, y)
+        self.point2 = (x + (a/2), y + ((a * (3 ** 0.5)) / 2))
+        self.point3 = (x - (a/2), y + ((a * (3 ** 0.5)) / 2))
+        self.point5 = (x - (a/2), y - ((a * (3 ** 0.5)) / 2))
+        self.point6 = (x + (a/2), y - ((a * (3 ** 0.5)) / 2))
+
+    def reset(self):
+        pg.draw.polygon(window, self.col, (self.point1, self.point2, self.point3, self.point4, self.point5, self.point6))
+
+win_width = 1200
+win_height = 700
+window = pg.display.set_mode((win_width, win_height))
+pg.display.set_caption("Maze")
+window.fill((200, 255, 255))
+
+y = 200
+x = 400
+a = 30
+
+dots = []
+
+for i in range(30):
+    col = (randint(0, 255), randint(0, 255), randint(0, 255))
+    if (i // 5) % 1 == 0 and (i // 5) % 2 == 1:
+        dot = GameSprite(x + (a * 3 * (i % 5)) + (a * 1.5), y + ((a * (3 ** 0.5)) / 2) * (i // 5), a, col)
+    else:
+        dot = GameSprite(x + (a * 3 * (i % 5)), y + ((a * (3 ** 0.5)) / 2) * (i // 5), a, col)
+    dots.append(dot)
+
+game = True
+finish = False
+clock = pg.time.Clock()
+FPS = 60
+
+while game:
+    for e in pg.event.get():
+        if e.type == pg.QUIT:
+            game = False
+    for dot in dots:
+        dot.reset()
+
+    pg.display.update()
+    clock.tick(FPS)
