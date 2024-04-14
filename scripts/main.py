@@ -3,11 +3,6 @@ from config import *
 
 # pip install -r requirements.txt
 
-# Спросить почему music_flag, digits_flag итд подсвечиваются с ошибками
-# (Global variable 'bots_flag' is undefined at the module level)
-
-# Почему delay с ошибкой? (name 'delay' can be undefined)
-
 
 pg.init()
 pg.display.set_icon(icon)
