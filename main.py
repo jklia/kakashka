@@ -6,7 +6,7 @@ from pygame import gfxdraw
 
 pg.init()
 
-state_colors = [(131, 46, 46), (17,62,125)]
+state_colors = [(131, 46, 46), (17, 62, 125)]
 # flag_red_image = pg.image.load('flag_red.png')
 flag_red_image = pg.transform.scale(pg.image.load('flag_red.png'), (40, 40))
 # flag_blue_image = pg.image.load('flag_blue.png')
@@ -22,8 +22,8 @@ win_height = 730
 # background_color = (24, 44, 37)
 # main_color = (48, 104, 68)
 
-background_color = (30,30,45)
-main_color = (59,59,74)
+background_color = (30, 30, 45)
+main_color = (59, 59, 74)
 
 objects = ['flag', 'house', 'person', 'tree']
 
@@ -111,6 +111,24 @@ def change_object(xm, ym, object):
 def next_change_object(cell, object):
     if cell.object == '':
         cell.object = object
+
+
+def tree_spreading():
+    global count
+    global dots
+    j = choice([0, 0, 1])
+    if j != 1:
+        return
+    count += 1
+    dots_copy = [i for i in (dots)]
+    if dot.object == 'tree':
+        k = choice([0, 0, 1])
+        if k != 0:
+            f = sample(dot.friends, k)
+            for cell in f:
+                if cell and dots_copy[cell].land != 0:
+                    next_change_object(dots_copy[cell], 'tree')
+    dots = dots_copy
 
 
 x = 40
@@ -292,18 +310,7 @@ while game:
         if dev and dev_mode(e):
             break
     for dot in dots:
-        j = choice([0, 0, 1])
-        if j == 1:
-            count += 1
-            dots_copy = [i for i in (dots)]
-            if dot.object == 'tree':
-                k = choice([0, 0, 1])
-                if k != 0:
-                    f = sample(dot.friends, k)
-                    for cell in f:
-                        if cell and dots_copy[cell].land != 0:
-                            next_change_object(dots_copy[cell], 'tree')
-            dots = dots_copy
+        tree_spreading()
         dot.reset()
     pg.display.update()
     clock.tick(FPS)
