@@ -7,13 +7,14 @@ from pygame import gfxdraw
 pg.init()
 
 state_colors = [(131, 46, 46), (17, 62, 125)]
-# flag_red_image = pg.image.load('flag_red.png')
-flag_red_image = pg.transform.scale(pg.image.load('flag_red.png'), (40, 40))
-# flag_blue_image = pg.image.load('flag_blue.png')
-flag_blue_image = pg.transform.scale(pg.image.load('flag_blue.png'), (40, 40))
-house_image = pg.image.load('house.png')
-knight = pg.transform.scale(pg.image.load('knight.png'), (40, 40))
-tree_image = pg.image.load('tree.png')
+flag_red_image = pg.transform.scale(pg.image.load('flag_red.png'), (35, 35))
+flag_blue_image = pg.transform.scale(pg.image.load('flag_blue.png'), (35, 35))
+house_image = pg.transform.scale(pg.image.load('house.png'), (35, 35))
+tower_image = pg.transform.scale(pg.image.load('tower.png'), (35, 35))
+knight_image = pg.transform.scale(pg.image.load('knight.png'), (35, 35))
+peasant_image = pg.transform.scale(pg.image.load('peasant.png'), (35, 35))
+lord_image = pg.transform.scale(pg.image.load('lord.png'), (35, 35))
+tree_image = pg.transform.scale(pg.image.load('tree.png'), (35, 35))
 f1 = pg.font.Font(None, 36)
 
 win_width = 574
@@ -21,11 +22,11 @@ win_height = 730
 
 # background_color = (24, 44, 37)
 # main_color = (48, 104, 68)
-
+background_image = pg.image.load('background.png')
 background_color = (30, 30, 45)
 main_color = (59, 59, 74)
 
-objects = ['flag', 'house', 'person', 'tree']
+objects = ['flag', 'house', 'lord', 'peasant', 'knight', 'tree', 'tower']
 
 
 def dev_mode(e):
@@ -35,7 +36,6 @@ def dev_mode(e):
     elif e.type == pg.MOUSEBUTTONDOWN:
         if e.button == 1:
             xm, ym = e.pos
-
             for dot in dots:
                 if dot.inside(xm, ym):
                     dot.state = 1
@@ -71,11 +71,26 @@ def dev_mode(e):
             break_flag = True
         elif e.key == pg.K_j:
             xm, ym = pg.mouse.get_pos()
-            change_object(xm, ym, 'person')
+            for dot in dots:
+                if dot.inside(xm, ym):
+                    if dot.object == '':
+                        change_object(xm, ym, 'peasant')
+                    elif dot.object == 'peasant':
+                        change_object(xm, ym, 'knight')
+                    elif dot.object == 'knight':
+                        change_object(xm, ym, 'lord')
+                    elif dot.object == 'lord':
+                        change_object(xm, ym, '')
+                    else:
+                        change_object(xm, ym, 'peasant')
             break_flag = True
         elif e.key == pg.K_t:
             xm, ym = pg.mouse.get_pos()
             change_object(xm, ym, 'tree')
+            break_flag = True
+        elif e.key == pg.K_y:
+            xm, ym = pg.mouse.get_pos()
+            change_object(xm, ym, 'tower')
             break_flag = True
     return break_flag
 
@@ -173,25 +188,33 @@ class GameSprite(pg.sprite.Sprite):
                 self.color = self.colors[self.state - 1]
 
     def reset(self):
-        gfxdraw.filled_polygon(window, (self.point1, self.point2, self.point3, self.point4, self.point5, self.point6),
+        if self.land !=0:
+            gfxdraw.filled_polygon(window, (self.point1, self.point2, self.point3, self.point4, self.point5, self.point6),
                                self.color)
-        pg.draw.aalines(window, background_color, True, (
-            (self.point1[0] + 0.5, self.point1[1]), (self.point2[0] + 1, self.point2[1] + 1),
-            (self.point3[0] - 2.5, self.point3[1] + 1),
-            (self.point4[0], self.point4[1]), (self.point5[0] - 1, self.point5[1] - 1),
-            (self.point6[0] + 1, self.point6[1] - 1)))
+            # заменить lines на aalines для сглаживания — но не будет никакого ретро! :(
+            pg.draw.lines(window, background_color, True, (
+                (self.point1[0] + 0.5, self.point1[1]), (self.point2[0] + 1, self.point2[1] + 1),
+                (self.point3[0] - 2.5, self.point3[1] + 1),
+                (self.point4[0], self.point4[1]), (self.point5[0] - 1, self.point5[1] - 1),
+                (self.point6[0] + 1, self.point6[1] - 1)))
 
         if self.object == 'flag':
             if self.state == 1:
-                window.blit(flag_red_image, (self.x - 10, self.y - 30))
+                window.blit(flag_red_image, (self.x - 10, self.y - 35))
             elif self.state == 2:
-                window.blit(flag_blue_image, (self.x - 10, self.y - 30))
+                window.blit(flag_blue_image, (self.x - 10, self.y - 35))
         elif self.object == 'house':
-            window.blit(house_image, (self.x - 15, self.y - 20))
-        elif self.object == 'person':
-            window.blit(knight, (self.x - 20, self.y - 30))
+            window.blit(house_image, (self.x - 17, self.y - 30))
+        elif self.object == 'tower':
+            window.blit(tower_image, (self.x - 17, self.y - 30))
+        elif self.object == 'peasant':
+            window.blit(peasant_image, (self.x - 17, self.y - 30))
+        elif self.object == 'knight':
+            window.blit(knight_image, (self.x - 17, self.y - 30))
+        elif self.object == 'lord':
+            window.blit(lord_image, (self.x - 17, self.y - 30))
         elif self.object == 'tree':
-            window.blit(tree_image, (self.x - 15, self.y - 20))
+            window.blit(tree_image, (self.x - 18, self.y - 30))
 
         #window.blit(self.text, (self.x - 15, self.y - 15))
 
@@ -212,12 +235,15 @@ class GameSprite(pg.sprite.Sprite):
         elif way == 'tree':
             if self.object == '':
                 self.object = 'tree'
+            # elif self.object == 'tree':
+            #     self.object = ''
+
 
 
 window = pg.display.set_mode((win_width, win_height))
 pg.display.set_caption("Antiyoy")
-window.fill(background_color)
-
+# window.fill(background_color)
+window.blit(background_image, (0, 0))
 dots = []
 field = Fields.maps[3]  # 0 - стандартное поле, 1 - карта №1, 2 - пустое поле, 3 - карта №2
 
@@ -310,7 +336,7 @@ while game:
         if dev and dev_mode(e):
             break
     for dot in dots:
-        tree_spreading()
+        #tree_spreading()
         dot.reset()
     pg.display.update()
     clock.tick(FPS)
