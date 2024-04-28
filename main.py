@@ -4,28 +4,14 @@ from random import sample, choice
 from fields import Fields
 from pygame import gfxdraw
 
+from game_render import (flag_red_image, flag_blue_image, house_image, tower_image, knight_image, peasant_image,
+                         lord_image, tree_image, person_shadow_image, house_shadow_image, tower_shadow_image,
+                         tree_shadow_image, flag_shadow_image, icon, background_image, background_color, main_color,
+                         state_colors)
+# from dev import Dev
+
 pg.init()
-
-flag_red_image = pg.transform.scale(pg.image.load('sprites/flag_red.png'), (36, 36))
-flag_blue_image = pg.transform.scale(pg.image.load('sprites/flag_blue.png'), (36, 36))
-house_image = pg.transform.scale(pg.image.load('sprites/house.png'), (30, 30))
-tower_image = pg.transform.scale(pg.image.load('sprites/tower.png'), (44, 44))
-knight_image = pg.transform.scale(pg.image.load('sprites/knight.png'), (36, 37))
-peasant_image = pg.transform.scale(pg.image.load('sprites/peasant.png'), (36, 37))
-lord_image = pg.transform.scale(pg.image.load('sprites/lord.png'), (36, 37))
-tree_image = pg.transform.scale(pg.image.load('sprites/tree.png'), (36, 36))
-
-person_shadow_image = pg.transform.scale(pg.image.load('sprites/shadow.png'), (38, 48))
-person_shadow_image.set_alpha(70)
-house_shadow_image = pg.transform.scale(pg.image.load('sprites/shadow.png'), (60, 52))
-house_shadow_image.set_alpha(70)
-tower_shadow_image = pg.transform.scale(pg.image.load('sprites/shadow.png'), (58, 52))
-tower_shadow_image.set_alpha(70)
-tree_shadow_image = pg.transform.scale(pg.image.load('sprites/shadow.png'), (52, 52))
-tree_shadow_image.set_alpha(70)
-flag_shadow_image = pg.transform.scale(pg.image.load('sprites/shadow.png'), (16, 32))
-flag_shadow_image.set_alpha(70)
-
+pg.display.set_icon(icon)
 f1 = pg.font.Font(None, 36)
 
 WIN_WIDTH = 574
@@ -35,80 +21,92 @@ Y = 40
 A = 30
 MAP_WIDTH = 6
 
-icon = pg.image.load('sprites/icon.png')
-pg.display.set_icon(icon)
-background_image = pg.image.load('sprites/background.png')
-background_color = (30, 30, 45)
-main_color = (45, 46, 58)
-state_colors = [(131, 46, 46), (17, 62, 125)]
-
 objects = ['flag', 'house', 'lord', 'peasant', 'knight', 'tree', 'tower']
 
+class Dev:
+    def dev_mode(e):
+        break_flag = False
+        if e.type == pg.QUIT:
+            break_flag = True
+        elif e.type == pg.MOUSEBUTTONDOWN:
+            if e.button == 1:
+                xm, ym = e.pos
+                for dot in dots:
+                    if dot.inside(xm, ym):
+                        dot.state = 1
+                        dot.change('simple')
+                        break_flag = True
+            if e.button == 2:
+                xm, ym = e.pos
+                for dot in dots:
+                    if dot.inside(xm, ym):
+                        dot.state = 0
+                        dot.change('simple')
+                        break_flag = True
+            if e.button == 3:
+                xm, ym = e.pos
+                for dot in dots:
+                    if dot.inside(xm, ym):
+                        dot.state = 2
+                        dot.change('simple')
+                        break_flag = True
 
-def dev_mode(e):
-    break_flag = False
-    if e.type == pg.QUIT:
-        break_flag = True
-    elif e.type == pg.MOUSEBUTTONDOWN:
-        if e.button == 1:
-            xm, ym = e.pos
-            for dot in dots:
-                if dot.inside(xm, ym):
-                    dot.state = 1
-                    dot.change('simple')
-                    break_flag = True
-        if e.button == 2:
-            xm, ym = e.pos
-            for dot in dots:
-                if dot.inside(xm, ym):
-                    dot.state = 0
-                    dot.change('simple')
-                    break_flag = True
-        if e.button == 3:
-            xm, ym = e.pos
-            for dot in dots:
-                if dot.inside(xm, ym):
-                    dot.state = 2
-                    dot.change('simple')
-                    break_flag = True
+        elif e.type == pg.KEYDOWN:
+            if e.key == pg.K_g:
+                xm, ym = pg.mouse.get_pos()
+                change_land(xm, ym)
+                break_flag = True
+            elif e.key == pg.K_f:
+                xm, ym = pg.mouse.get_pos()
+                Dev.dev_change_object(xm, ym, 'flag')
+                break_flag = True
+            elif e.key == pg.K_h:
+                xm, ym = pg.mouse.get_pos()
+                Dev.dev_change_object(xm, ym, 'house')
+                break_flag = True
+            elif e.key == pg.K_j:
+                xm, ym = pg.mouse.get_pos()
+                for dot in dots:
+                    if dot.inside(xm, ym):
+                        if dot.object == '':
+                            Dev.dev_change_object(xm, ym, 'peasant')
+                        elif dot.object == 'peasant':
+                            Dev.dev_change_object(xm, ym, 'knight')
+                        elif dot.object == 'knight':
+                            Dev.dev_change_object(xm, ym, 'lord')
+                        elif dot.object == 'lord':
+                            Dev.dev_change_object(xm, ym, '')
+                        else:
+                            Dev.dev_change_object(xm, ym, 'peasant')
+                break_flag = True
+            elif e.key == pg.K_t:
+                xm, ym = pg.mouse.get_pos()
+                Dev.dev_change_object(xm, ym, 'tree')
+                break_flag = True
+            elif e.key == pg.K_y:
+                xm, ym = pg.mouse.get_pos()
+                Dev.dev_change_object(xm, ym, 'tower')
+                break_flag = True
+        return break_flag
 
-    elif e.type == pg.KEYDOWN:
-        if e.key == pg.K_g:
-            xm, ym = pg.mouse.get_pos()
-            change_land(xm, ym)
-            break_flag = True
-        elif e.key == pg.K_f:
-            xm, ym = pg.mouse.get_pos()
-            dev_change_object(xm, ym, 'flag')
-            break_flag = True
-        elif e.key == pg.K_h:
-            xm, ym = pg.mouse.get_pos()
-            dev_change_object(xm, ym, 'house')
-            break_flag = True
-        elif e.key == pg.K_j:
-            xm, ym = pg.mouse.get_pos()
-            for dot in dots:
-                if dot.inside(xm, ym):
-                    if dot.object == '':
-                        dev_change_object(xm, ym, 'peasant')
-                    elif dot.object == 'peasant':
-                        dev_change_object(xm, ym, 'knight')
-                    elif dot.object == 'knight':
-                        dev_change_object(xm, ym, 'lord')
-                    elif dot.object == 'lord':
-                        dev_change_object(xm, ym, '')
-                    else:
-                        dev_change_object(xm, ym, 'peasant')
-            break_flag = True
-        elif e.key == pg.K_t:
-            xm, ym = pg.mouse.get_pos()
-            dev_change_object(xm, ym, 'tree')
-            break_flag = True
-        elif e.key == pg.K_y:
-            xm, ym = pg.mouse.get_pos()
-            dev_change_object(xm, ym, 'tower')
-            break_flag = True
-    return break_flag
+    def dev_change_object(xm, ym, object):
+        for dot in dots:
+            if dot.inside(xm, ym):
+                if dot.object == object and dot.object:
+                    dot.object = ''
+                else:
+                    dot.object = object
+                dot.change('simple')
+
+def change_land(xm, ym):
+    for dot in dots:
+        if dot.inside(xm, ym):
+            if dot.land == 1:
+                dot.land = 0
+            else:
+                dot.land = 1
+            dot.change('simple')
+
 
 
 def dot_init():
@@ -184,26 +182,6 @@ def dot_init():
                               field[i][1], field[i][2], state_colors, friends)
 
 
-def change_land(xm, ym):
-    for dot in dots:
-        if dot.inside(xm, ym):
-            if dot.land == 1:
-                dot.land = 0
-            else:
-                dot.land = 1
-            dot.change('simple')
-
-
-def dev_change_object(xm, ym, object):
-    for dot in dots:
-        if dot.inside(xm, ym):
-            if dot.object == object and dot.object:
-                dot.object = ''
-            else:
-                dot.object = object
-            dot.change('simple')
-
-
 def change_object(cell, object):
     if cell.object == '':
         cell.object = object
@@ -231,7 +209,6 @@ def tree_spreading():
 class GameSprite(pg.sprite.Sprite):
 
     def __init__(self, x, y, x_cord, y_cord, land, state, object, colors, friends, text=''):
-        super().__init__()
         self.colors = colors
         self.state = state
         self.land = land
@@ -262,9 +239,12 @@ class GameSprite(pg.sprite.Sprite):
 
     def reset(self):
         if self.land != 0:
-            gfxdraw.filled_polygon(window, (self.point1, self.point2, self.point3, self.point4, self.point5, self.point6), self.color)
+            gfxdraw.filled_polygon(window,
+                                   (self.point1, self.point2, self.point3, self.point4, self.point5, self.point6),
+                                   self.color)
             # можно заменить lines на aalines для сглаживания — но не будет никакого ретро! :(
-            pg.draw.lines(window, background_color, True, (self.point1, self.point2, self.point3, self.point4, self.point5, self.point6))
+            pg.draw.lines(window, background_color, True,
+                          (self.point1, self.point2, self.point3, self.point4, self.point5, self.point6))
 
         if self.object == 'flag':
             if self.state == 1:
@@ -332,7 +312,7 @@ while game:
     for e in pg.event.get():
         if e.type == pg.QUIT:
             game = False
-        if dev and dev_mode(e):
+        if dev and Dev.dev_mode(e):
             break
     for dot in dots:
         # tree_spreading()
