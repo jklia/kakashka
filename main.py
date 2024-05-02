@@ -325,15 +325,7 @@ class GameSprite():
             if self.object == '':
                 self.object = 'tree'
 
-def pause(self):
-    if e.type == pygame_gui.UI_BUTTON_PRESSED:
-        if e.ui_element == music_button:
-            if pg.mixer.music.get_busy():
-                 pg.mixer.music.pause()
-                 music_button.set_text('Music ON')
-            else:
-                pg.mixer.music.unpause()
-                music_button.set_text('Music OFF')
+
 
 window = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 pg.display.set_caption("Antiyoy")
@@ -354,7 +346,20 @@ music_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((5, WIN_HEIGHT
                                             text='Music OFF',
                                             manager=manager)
 print(music_button.colours)
+# music_button.colours['normal_bg'][0] = 76
+# music_button.colours['normal_bg'][1] = 24
+# music_button.colours['normal_bg'][2] = 24
 
+
+def pause(self, button):
+    if e.type == pygame_gui.UI_BUTTON_PRESSED:
+        if e.ui_element == button:
+            if pg.mixer.music.get_busy():
+                 pg.mixer.music.pause()
+                 button.set_text('Music ON')
+            else:
+                pg.mixer.music.unpause()
+                button.set_text('Music OFF')
 
 dots = []
 for i in range(156):
@@ -384,7 +389,7 @@ while game:
         if e.type == pg.QUIT:
             game = False
 
-        pause(e)
+        pause(e, music_button)
 
         if dev and Dev.dev_mode(e):
             break
