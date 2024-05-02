@@ -3,6 +3,7 @@ import pygame as pg
 from random import sample, choice, randint
 from fields import Fields
 from pygame import gfxdraw
+import pygame_gui
 
 from game_render import (flag_red_image, flag_blue_image, house_image, tower_image, knight_image, peasant_image,
                          lord_image, tree_image, person_shadow_image, house_shadow_image, tower_shadow_image,
@@ -15,7 +16,8 @@ pg.init()
 pg.display.set_icon(icon)
 
 WIN_WIDTH = 574
-WIN_HEIGHT = 730
+# Изначально 730
+WIN_HEIGHT = 790
 X = 40
 Y = 40
 A = 30
@@ -100,23 +102,28 @@ class Dev:
                 dot.change('simple')
 
 
-def dfs(cell, depth=3, visited=set(), ally=True):
+def dfs(cell, depth=3, visited=set(), ally=True, origin=None):
     global dots
-    state = dots[cell].state
     friends = set()
+
+    if origin is None: origin = dots[cell].state
+
     if dots[cell].state == 0:
         ally = False
     else:
         ally = True
+
     if depth >= 0:
         depth -= 1
         if cell:
             for friend in dots[cell].friends:
                 if dots[friend].land and ally:
-                    friends.add(friend)
+                    for n_friend in dots[friend].friends:
+                        if dots[n_friend].state == origin:
+                            friends.add(friend)
             visited.add(cell)
         for next in friends:
-            dfs(next, depth, visited, ally)
+            dfs(next, depth, visited, ally, origin)
     return visited
 
 
@@ -169,7 +176,9 @@ def dot_init(i):
             if i in left:
                 friends[4] = False
                 friends[5] = False
-
+            for j in range(len(friends)):
+                if friends[j] >= 155:
+                    friends[j] = False
         return GameSprite(X + (A * 3 * (i % MAP_WIDTH)) + (A * 1.5), Y + ((A * (3 ** 0.5)) / 2) * (i // MAP_WIDTH),
                           x_cord, y_cord,
                           field[i][0], field[i][1], field[i][2], state_colors, friends, i)
@@ -196,7 +205,9 @@ def dot_init(i):
             if i in left:
                 friends[4] = False
                 friends[5] = False
-
+            for j in range(len(friends)):
+                if friends[j] >= 155:
+                    friends[j] = False
             return GameSprite(X + (A * 3 * (i % MAP_WIDTH)), Y + ((A * (3 ** 0.5)) / 2) * (i // MAP_WIDTH), x_cord,
                               y_cord,
                               field[i][0],
@@ -314,6 +325,13 @@ class GameSprite():
             if self.object == '':
                 self.object = 'tree'
 
+def pause(self):
+    if e.type == pygame_gui.UI_BUTTON_PRESSED:
+        if e.ui_element == hello_button:
+            if pg.mixer.music.get_busy():
+                 pg.mixer.music.pause()
+            else:
+                pg.mixer.music.unpause()
 
 window = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 pg.display.set_caption("Antiyoy")
@@ -329,6 +347,11 @@ dev = True
 digits = True
 music = True
 
+manager = pygame_gui.UIManager((WIN_WIDTH, WIN_HEIGHT))
+hello_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((5, WIN_HEIGHT-55), (100, 50)),
+                                            text='Music',
+                                            manager=manager)
+
 dots = []
 for i in range(156):
     dot = dot_init(i)
@@ -339,19 +362,35 @@ if music:
     pg.mixer.music.set_volume(0.2)
     pg.mixer.music.play(-1)
 
+
 # Как работает DFS
-dfs_list = dfs(142, 3)
-for i in dfs_list:
-    dots[i].color = (97, 84, 94)
-    dots[i].reset()
+def dfs_show(start, depth):
+    dfs_list = dfs(start, depth)
+    dots[start].color = (dots[start].color[0] + 75, dots[start].color[1] + 75, dots[start].color[2] + 75)
+    for i in dfs_list:
+        dots[i].color = (dots[i].color[0] + 45, dots[i].color[1] + 45, dots[i].color[2] + 45)
+        dots[i].reset()
+
+
+dfs_show(117, 3)
 
 while game:
-    window.blit(background_image, (0, 0))
+    time_delta = clock.tick(60) / 1000
     for e in pg.event.get():
         if e.type == pg.QUIT:
             game = False
+
+        pause(e)
+
         if dev and Dev.dev_mode(e):
             break
+
+        manager.process_events(e)
+
+    manager.update(time_delta)
+
+    window.blit(background_image, (0, 0))
+    manager.draw_ui(window)
 
     for dot in dots:
         # tree_spreading()
