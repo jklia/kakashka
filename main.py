@@ -327,11 +327,13 @@ class GameSprite():
 
 def pause(self):
     if e.type == pygame_gui.UI_BUTTON_PRESSED:
-        if e.ui_element == hello_button:
+        if e.ui_element == music_button:
             if pg.mixer.music.get_busy():
                  pg.mixer.music.pause()
+                 music_button.set_text('Music ON')
             else:
                 pg.mixer.music.unpause()
+                music_button.set_text('Music OFF')
 
 window = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 pg.display.set_caption("Antiyoy")
@@ -348,9 +350,11 @@ digits = True
 music = True
 
 manager = pygame_gui.UIManager((WIN_WIDTH, WIN_HEIGHT))
-hello_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((5, WIN_HEIGHT-55), (100, 50)),
-                                            text='Music',
+music_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((5, WIN_HEIGHT - 55), (100, 50)),
+                                            text='Music OFF',
                                             manager=manager)
+print(music_button.colours)
+
 
 dots = []
 for i in range(156):
