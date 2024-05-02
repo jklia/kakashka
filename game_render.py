@@ -1,4 +1,6 @@
 import pygame as pg
+import os
+pg.init()
 
 flag_red_image = pg.transform.scale(pg.image.load('sprites/flag_red.png'), (36, 36))
 flag_blue_image = pg.transform.scale(pg.image.load('sprites/flag_blue.png'), (36, 36))
@@ -28,3 +30,7 @@ state_colors = [(131, 46, 46), (17, 62, 125)]
 
 pg.font.init()
 f1 = pg.font.SysFont('arialblack', 18)
+
+tracks = []
+for track in os.listdir('music'):
+    tracks.append(f'music/{track}')

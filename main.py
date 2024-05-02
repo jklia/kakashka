@@ -1,18 +1,18 @@
 import copy
 import pygame as pg
-from random import sample, choice
+from random import sample, choice, randint
 from fields import Fields
 from pygame import gfxdraw
 
 from game_render import (flag_red_image, flag_blue_image, house_image, tower_image, knight_image, peasant_image,
                          lord_image, tree_image, person_shadow_image, house_shadow_image, tower_shadow_image,
                          tree_shadow_image, flag_shadow_image, icon, background_image, background_color, main_color,
-                         state_colors, f1)
+                         state_colors, f1, tracks)
+
 # from dev import Dev
 
 pg.init()
 pg.display.set_icon(icon)
-
 
 WIN_WIDTH = 574
 WIN_HEIGHT = 730
@@ -22,6 +22,7 @@ A = 30
 MAP_WIDTH = 6
 
 objects = ['flag', 'house', 'lord', 'peasant', 'knight', 'tree', 'tower']
+
 
 class Dev:
     def dev_mode(e):
@@ -99,7 +100,7 @@ class Dev:
                 dot.change('simple')
 
 
-def dfs(cell, depth = 3, visited = set(), ally = True):
+def dfs(cell, depth=3, visited=set(), ally=True):
     global dots
     state = dots[cell].state
     friends = set()
@@ -118,6 +119,7 @@ def dfs(cell, depth = 3, visited = set(), ally = True):
             dfs(next, depth, visited, ally)
     return visited
 
+
 def change_land(xm, ym):
     for dot in dots:
         if dot.inside(xm, ym):
@@ -126,7 +128,6 @@ def change_land(xm, ym):
             else:
                 dot.land = 1
             dot.change('simple')
-
 
 
 def dot_init(i):
@@ -208,7 +209,7 @@ def change_object(cell, object):
     # добавить условие для деревьев, если на них наступит человек
 
 
-def tree_spreading(count = 0):
+def tree_spreading(count=0):
     global dots
     j = choice([0, 0, 1])
     if j != 1:
@@ -223,6 +224,7 @@ def tree_spreading(count = 0):
                 if cell and dots_copy[cell].land != 0:
                     change_object(dots_copy[cell], 'tree')
     dots = dots_copy
+
 
 class GameSprite():
 
@@ -293,6 +295,7 @@ class GameSprite():
             text = f1.render(str(self.count), True, (156, 156, 1))
             place = text.get_rect(center=(self.x, self.y))
             window.blit(text, place)
+
     def inside(self, x, y):
         return self.rect.collidepoint(x, y)
 
@@ -314,13 +317,8 @@ class GameSprite():
 
 window = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 pg.display.set_caption("Antiyoy")
+
 field = Fields.maps[3]  # 0 - стандартное поле, 1 - карта №1, 2 - пустое поле, 3 - карта №2
-
-dots = []
-for i in range(156):
-    dot = dot_init(i)
-    dots.append(dot)
-
 
 game = True
 finish = False
@@ -329,6 +327,17 @@ FPS = 60
 
 dev = True
 digits = True
+music = True
+
+dots = []
+for i in range(156):
+    dot = dot_init(i)
+    dots.append(dot)
+
+if music:
+    pg.mixer.music.load(tracks[randint(0, len(tracks) - 1)])
+    pg.mixer.music.set_volume(0.2)
+    pg.mixer.music.play(-1)
 
 # Как работает DFS
 dfs_list = dfs(142, 3)
