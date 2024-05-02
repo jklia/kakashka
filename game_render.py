@@ -25,3 +25,6 @@ flag_shadow_image.set_alpha(70)
 background_color = (30, 30, 45)
 main_color = (45, 46, 58)
 state_colors = [(131, 46, 46), (17, 62, 125)]
+
+pg.font.init()
+f1 = pg.font.SysFont('arialblack', 18)

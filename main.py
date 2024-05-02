@@ -7,12 +7,12 @@ from pygame import gfxdraw
 from game_render import (flag_red_image, flag_blue_image, house_image, tower_image, knight_image, peasant_image,
                          lord_image, tree_image, person_shadow_image, house_shadow_image, tower_shadow_image,
                          tree_shadow_image, flag_shadow_image, icon, background_image, background_color, main_color,
-                         state_colors)
+                         state_colors, f1)
 # from dev import Dev
 
 pg.init()
 pg.display.set_icon(icon)
-f1 = pg.font.Font(None, 36)
+
 
 WIN_WIDTH = 574
 WIN_HEIGHT = 730
@@ -98,6 +98,26 @@ class Dev:
                     dot.object = object
                 dot.change('simple')
 
+
+def dfs(cell, depth = 3, visited = set(), ally = True):
+    global dots
+    state = dots[cell].state
+    friends = set()
+    if dots[cell].state == 0:
+        ally = False
+    else:
+        ally = True
+    if depth >= 0:
+        depth -= 1
+        if cell:
+            for friend in dots[cell].friends:
+                if dots[friend].land and ally:
+                    friends.add(friend)
+            visited.add(cell)
+        for next in friends:
+            dfs(next, depth, visited, ally)
+    return visited
+
 def change_land(xm, ym):
     for dot in dots:
         if dot.inside(xm, ym):
@@ -109,7 +129,7 @@ def change_land(xm, ym):
 
 
 
-def dot_init():
+def dot_init(i):
     x_cord = 1
     y_cord = 0
 
@@ -151,7 +171,7 @@ def dot_init():
 
         return GameSprite(X + (A * 3 * (i % MAP_WIDTH)) + (A * 1.5), Y + ((A * (3 ** 0.5)) / 2) * (i // MAP_WIDTH),
                           x_cord, y_cord,
-                          field[i][0], field[i][1], field[i][2], state_colors, friends)
+                          field[i][0], field[i][1], field[i][2], state_colors, friends, i)
 
     else:
         friends = [i - 12, i - 6, i + 6, i + 12, i + 5, i - 7]
@@ -179,7 +199,7 @@ def dot_init():
             return GameSprite(X + (A * 3 * (i % MAP_WIDTH)), Y + ((A * (3 ** 0.5)) / 2) * (i // MAP_WIDTH), x_cord,
                               y_cord,
                               field[i][0],
-                              field[i][1], field[i][2], state_colors, friends)
+                              field[i][1], field[i][2], state_colors, friends, i)
 
 
 def change_object(cell, object):
@@ -188,8 +208,7 @@ def change_object(cell, object):
     # добавить условие для деревьев, если на них наступит человек
 
 
-def tree_spreading():
-    global count
+def tree_spreading(count = 0):
     global dots
     j = choice([0, 0, 1])
     if j != 1:
@@ -205,10 +224,9 @@ def tree_spreading():
                     change_object(dots_copy[cell], 'tree')
     dots = dots_copy
 
+class GameSprite():
 
-class GameSprite(pg.sprite.Sprite):
-
-    def __init__(self, x, y, x_cord, y_cord, land, state, object, colors, friends, text=''):
+    def __init__(self, x, y, x_cord, y_cord, land, state, object, colors, friends, count, text=''):
         self.colors = colors
         self.state = state
         self.land = land
@@ -219,6 +237,7 @@ class GameSprite(pg.sprite.Sprite):
         self.y_cord = y_cord
         self.a = A
         self.object = object
+        self.count = count
         self.point1 = (x + A, y)
         self.point4 = (x - A, y)
         self.point2 = (x + (A / 2), y + ((A * (3 ** 0.5)) / 2))
@@ -242,7 +261,6 @@ class GameSprite(pg.sprite.Sprite):
             gfxdraw.filled_polygon(window,
                                    (self.point1, self.point2, self.point3, self.point4, self.point5, self.point6),
                                    self.color)
-            # можно заменить lines на aalines для сглаживания — но не будет никакого ретро! :(
             pg.draw.lines(window, background_color, True,
                           (self.point1, self.point2, self.point3, self.point4, self.point5, self.point6))
 
@@ -271,7 +289,10 @@ class GameSprite(pg.sprite.Sprite):
         elif self.object == 'tree':
             window.blit(tree_shadow_image, (self.x - 26, self.y - 22))
             window.blit(tree_image, (self.x - 19, self.y - 30))
-
+        if digits:
+            text = f1.render(str(self.count), True, (156, 156, 1))
+            place = text.get_rect(center=(self.x, self.y))
+            window.blit(text, place)
     def inside(self, x, y):
         return self.rect.collidepoint(x, y)
 
@@ -297,8 +318,9 @@ field = Fields.maps[3]  # 0 - стандартное поле, 1 - карта �
 
 dots = []
 for i in range(156):
-    dot = dot_init()
+    dot = dot_init(i)
     dots.append(dot)
+
 
 game = True
 finish = False
@@ -306,6 +328,13 @@ clock = pg.time.Clock()
 FPS = 60
 
 dev = True
+digits = True
+
+# Как работает DFS
+dfs_list = dfs(142, 3)
+for i in dfs_list:
+    dots[i].color = (97, 84, 94)
+    dots[i].reset()
 
 while game:
     window.blit(background_image, (0, 0))
@@ -314,6 +343,7 @@ while game:
             game = False
         if dev and Dev.dev_mode(e):
             break
+
     for dot in dots:
         # tree_spreading()
         dot.reset()
