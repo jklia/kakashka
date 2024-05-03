@@ -17,7 +17,7 @@ pg.display.set_icon(icon)
 
 WIN_WIDTH = 574
 # Изначально 730
-WIN_HEIGHT = 790
+WIN_HEIGHT = 780
 X = 40
 Y = 40
 A = 30
@@ -342,7 +342,7 @@ digits = True
 music = True
 
 manager = pygame_gui.UIManager((WIN_WIDTH, WIN_HEIGHT))
-music_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((5, WIN_HEIGHT - 55), (100, 50)),
+music_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((5, WIN_HEIGHT - 45), (90, 40)),
                                             text='Music OFF',
                                             manager=manager)
 print(music_button.colours)
