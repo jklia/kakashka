@@ -56,13 +56,61 @@ class Players:
         self.field[cell].defense = 0
 
     def move(self, cell, dest):
+        # добавить условия по дфсу, сделать дфс для досту
         if (self.field[cell].object in moving_objects) and (
-                self.field[dest].object not in static_objects or self.field[dest].object == 'tree'):
+                self.field[dest].object not in static_objects or self.field[dest].object == 'tree') and cell != dest:
             self.field[dest].change_object(self.field[cell].object)
             self.field[dest].state = self.field[cell].state
             self.default(cell)
             self.field[dest].change()
             self.field[cell].change()
+
+    def build(self, object, cell):
+        near = 0
+        if object == 'house':
+            if self.money >= 12 and self.field[cell].state == self.state:
+                self.field[cell].change_object(object)
+                self.money -= 12
+        elif object == 'tower':
+            if self.money >= 15 and self.field[cell].state == self.state:
+                self.field[cell].change_object(object)
+                self.money -= 15
+        else:
+            for i in self.field[cell].friends:
+                if self.field[i].state == self.state:
+                    near = 1
+                    break
+            if near == 1:
+                if object == 'peasant':
+                    if (self.money >= 10 and self.field[cell].state != self.state and self.field[cell].defense <= 0) or \
+                            (self.money >= 10 and self.field[cell].state == self.state):
+                        if self.field[cell].state != self.state:
+                            self.default(cell)
+                        self.field[cell].change_object(object)
+                        self.money -= 10
+                        if self.field[cell].state != self.state:
+                            self.field[cell].state = self.state
+                            self.field[cell].change()
+                elif object == 'knight':
+                    if (self.money >= 20 and self.field[cell].state != self.state and self.field[cell].defense <= 1) or \
+                            (self.money >= 20 and self.field[cell].state == self.state):
+                        if self.field[cell].state != self.state:
+                            self.default(cell)
+                        self.field[cell].change_object(object)
+                        self.money -= 20
+                        if self.field[cell].state != self.state:
+                            self.field[cell].state = self.state
+                            self.field[cell].change()
+                elif object == 'lord':
+                    if (self.money >= 30 and self.field[cell].state != self.state and self.field[cell].defense <= 2) or \
+                            (self.money >= 30 and self.field[cell].state == self.state):
+                        if self.field[cell].state != self.state:
+                            self.default(cell)
+                        self.field[cell].change_object(object)
+                        self.money -= 30
+                        if self.field[cell].state != self.state:
+                            self.field[cell].state = self.state
+                            self.field[cell].change()
 
 
 class Dev:
@@ -155,7 +203,7 @@ def dfs_moves(cell, depth=3, visited=None, ally=True, origin=None):
         depth -= 1
         if cell:
             for friend in dots[cell].friends:
-                if dots[friend].land and ally:
+                if ally:
                     for n_friend in dots[friend].friends:
                         if dots[n_friend].state == origin:
                             friends.add(friend)
@@ -165,7 +213,7 @@ def dfs_moves(cell, depth=3, visited=None, ally=True, origin=None):
     return visited
 
 
-def dfs_defense(cell, depth=1, visited=None, ally=True, origin=None):
+def dfs_defense(cell, depth=1, visited=None, origin=None):
     global dots
     friends = set()
     if origin is None: origin = dots[cell].state
@@ -178,7 +226,7 @@ def dfs_defense(cell, depth=1, visited=None, ally=True, origin=None):
                     friends.add(friend)
             visited.add(cell)
         for next in friends:
-            dfs_defense(next, depth, visited, ally, origin)
+            dfs_defense(next, depth, visited, origin)
     return visited
 
 
@@ -213,13 +261,12 @@ def dot_init(i):
 
     if field[i][2] == 'knight' or field[i][2] == 'flag':
         defense = 1
-    elif field[i][2] == 'lord' or field[i][2] == 'tower' :
+    elif field[i][2] == 'lord' or field[i][2] == 'tower':
         defense = 2
 
     if (i // MAP_WIDTH) % 1 == 0 and (i // MAP_WIDTH) % 2 == 1:
 
         friends = [i - 12, i - 5, i + 7, i + 12, i + 6, i - 6]
-
 
         for f in range(6):
             if i in up:
@@ -241,8 +288,10 @@ def dot_init(i):
                 friends[4] = False
                 friends[5] = False
             for j in range(len(friends)):
-                if friends[j] >= 155:
+                if friends[j] >= 155 or field[friends[j]][0] == 0:
                     friends[j] = False
+        while False in friends:
+            friends.remove(False)
         return GameSprite(X + (A * 3 * (i % MAP_WIDTH)) + (A * 1.5), Y + ((A * (3 ** 0.5)) / 2) * (i // MAP_WIDTH),
                           x_cord, y_cord,
                           field[i][0], field[i][1], field[i][2], state_colors, friends, i, defense)
@@ -251,7 +300,6 @@ def dot_init(i):
 
         friends = [i - 12, i - 6, i + 6, i + 12, i + 5, i - 7]
 
-
         for f in range(6):
             if i in up:
                 friends[0] = False
@@ -272,13 +320,14 @@ def dot_init(i):
                 friends[4] = False
                 friends[5] = False
             for j in range(len(friends)):
-                if friends[j] >= 155:
+                if friends[j] >= 155 or field[friends[j]][0] == 0:
                     friends[j] = False
+            while False in friends:
+                friends.remove(False)
             return GameSprite(X + (A * 3 * (i % MAP_WIDTH)), Y + ((A * (3 ** 0.5)) / 2) * (i // MAP_WIDTH), x_cord,
                               y_cord,
                               field[i][0],
                               field[i][1], field[i][2], state_colors, friends, i, defense)
-
 
 
 def tree_spreading(count=0):
@@ -373,9 +422,10 @@ class GameSprite():
         if self.object in defense_objects:
             dfs_list = dfs_defense(self.id)
             for i in dfs_list:
-                # if dots[i].defense >= self.defense:
-                dots[i].defense = self.defense
+                if dots[i].defense < self.defense:
+                    dots[i].defense = self.defense
             # print(i, dots[i].defense, self.defense)
+
     def inside(self, x, y):  # dev function
         return self.rect.collidepoint(x, y)
 
@@ -455,7 +505,6 @@ def pause(self, button):
                 button.set_text('Music OFF')
 
 
-
 # def field_init():
 #     global dots
 #     for i in range(156):
@@ -474,7 +523,6 @@ for i in range(156):
 for dot in dots:
     dot.set_defense()
 
-
 if music:
     pg.mixer.music.load(tracks[randint(0, len(tracks) - 1)])
     pg.mixer.music.set_volume(0.2)
@@ -485,7 +533,7 @@ if music:
 def dfs_show(start, depth, mode):
     if mode == 'defense':
         dfs_list = dfs_defense(start)
-    elif move == 'moves':
+    elif mode == 'moves':
         dfs_list = dfs_moves(start, depth)
     dots[start].color = (dots[start].color[0] + 75, dots[start].color[1] + 75, dots[start].color[2] + 75)
     for i in dfs_list:
@@ -494,15 +542,12 @@ def dfs_show(start, depth, mode):
 
 
 player1 = Players(dots, 1, 1)
-player1.move(142, 130)
+player1.move(130, 130)
 
-print(dots[124].defense)
+print(dots[130].object)
 
-# dfs_show(136, 3, 'defense')
-# dfs_show(25, 3, 'move')
-
-for dot in dots:
-    print(dot.id, dot.defense)
+dfs_show(136, 3, 'defense')
+dfs_show(25, 3, 'moves')
 
 while game:
     time_delta = clock.tick(60) / 1000

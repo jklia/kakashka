@@ -1,2 +1,3 @@
 
-object = moving_objects[moving_objects.index(dots[cell].object)+1]
+f = [1, 2, 3, False, False]
+cf = f.copy()
