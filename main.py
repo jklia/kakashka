@@ -24,6 +24,45 @@ A = 30
 MAP_WIDTH = 6
 
 objects = ['flag', 'house', 'lord', 'peasant', 'knight', 'tree', 'tower']
+moving_objects = ['peasant', 'knight', 'lord']
+static_objects = ['house', 'tree', 'tower']
+defense_objects = ['flag', 'tower', 'peasant', 'knight', 'lord']
+
+
+class Players:
+
+    def __init__(self, field, id, state, money=10):
+        self.field = field
+        self.id = id
+        self.state = state
+        self.money = money
+
+    def count(self):
+        for cell in self.field:
+            if cell.state == self.state:
+                if cell.object == 'house':
+                    self.money += 4
+                if cell.object != 'tree':
+                    self.money += 1
+                if cell.object == 'peasant':
+                    self.money -= 2
+                if cell.object == 'knight':
+                    self.money -= 6
+                if cell.object == 'lord':
+                    self.money -= 18
+
+    def default(self, cell):
+        self.field[cell].object = ''
+        self.field[cell].defense = 0
+
+    def move(self, cell, dest):
+        if (self.field[cell].object in moving_objects) and (
+                self.field[dest].object not in static_objects or self.field[dest].object == 'tree'):
+            self.field[dest].change_object(self.field[cell].object)
+            self.field[dest].state = self.field[cell].state
+            self.default(cell)
+            self.field[dest].change()
+            self.field[cell].change()
 
 
 class Dev:
@@ -37,21 +76,21 @@ class Dev:
                 for dot in dots:
                     if dot.inside(xm, ym):
                         dot.state = 1
-                        dot.change('simple')
+                        dot.change()
                         break_flag = True
             if e.button == 2:
                 xm, ym = e.pos
                 for dot in dots:
                     if dot.inside(xm, ym):
                         dot.state = 0
-                        dot.change('simple')
+                        dot.change()
                         break_flag = True
             if e.button == 3:
                 xm, ym = e.pos
                 for dot in dots:
                     if dot.inside(xm, ym):
                         dot.state = 2
-                        dot.change('simple')
+                        dot.change()
                         break_flag = True
 
         elif e.type == pg.KEYDOWN:
@@ -99,15 +138,14 @@ class Dev:
                     dot.object = ''
                 else:
                     dot.object = object
-                dot.change('simple')
+                dot.change()
 
 
-def dfs(cell, depth=3, visited=set(), ally=True, origin=None):
+def dfs_moves(cell, depth=3, visited=None, ally=True, origin=None):
     global dots
     friends = set()
-
     if origin is None: origin = dots[cell].state
-
+    if visited is None: visited = set()
     if dots[cell].state == 0:
         ally = False
     else:
@@ -123,7 +161,24 @@ def dfs(cell, depth=3, visited=set(), ally=True, origin=None):
                             friends.add(friend)
             visited.add(cell)
         for next in friends:
-            dfs(next, depth, visited, ally, origin)
+            dfs_moves(next, depth, visited, ally, origin)
+    return visited
+
+
+def dfs_defense(cell, depth=1, visited=None, ally=True, origin=None):
+    global dots
+    friends = set()
+    if origin is None: origin = dots[cell].state
+    if visited is None: visited = set()
+    if depth >= 0:
+        depth -= 1
+        if cell:
+            for friend in dots[cell].friends:
+                if dots[friend].state == origin:
+                    friends.add(friend)
+            visited.add(cell)
+        for next in friends:
+            dfs_defense(next, depth, visited, ally, origin)
     return visited
 
 
@@ -134,7 +189,7 @@ def change_land(xm, ym):
                 dot.land = 0
             else:
                 dot.land = 1
-            dot.change('simple')
+            dot.change()
 
 
 def dot_init(i):
@@ -149,13 +204,22 @@ def dot_init(i):
     very_down = [150, 151, 152, 152, 154, 155]
 
     friends = []
+    defense = 0
     x_cord = (i % 6) + 1
     if i % 6 == 0:
         y_cord += 1
-    text1 = f1.render(str(i), 1, (180, 0, 0))
+
+    # text1 = f1.render(str(i), 1, (180, 0, 0))
+
+    if field[i][2] == 'knight' or field[i][2] == 'flag':
+        defense = 1
+    elif field[i][2] == 'lord' or field[i][2] == 'tower' :
+        defense = 2
 
     if (i // MAP_WIDTH) % 1 == 0 and (i // MAP_WIDTH) % 2 == 1:
+
         friends = [i - 12, i - 5, i + 7, i + 12, i + 6, i - 6]
+
 
         for f in range(6):
             if i in up:
@@ -181,10 +245,12 @@ def dot_init(i):
                     friends[j] = False
         return GameSprite(X + (A * 3 * (i % MAP_WIDTH)) + (A * 1.5), Y + ((A * (3 ** 0.5)) / 2) * (i // MAP_WIDTH),
                           x_cord, y_cord,
-                          field[i][0], field[i][1], field[i][2], state_colors, friends, i)
+                          field[i][0], field[i][1], field[i][2], state_colors, friends, i, defense)
 
     else:
+
         friends = [i - 12, i - 6, i + 6, i + 12, i + 5, i - 7]
+
 
         for f in range(6):
             if i in up:
@@ -211,13 +277,8 @@ def dot_init(i):
             return GameSprite(X + (A * 3 * (i % MAP_WIDTH)), Y + ((A * (3 ** 0.5)) / 2) * (i // MAP_WIDTH), x_cord,
                               y_cord,
                               field[i][0],
-                              field[i][1], field[i][2], state_colors, friends, i)
+                              field[i][1], field[i][2], state_colors, friends, i, defense)
 
-
-def change_object(cell, object):
-    if cell.object == '':
-        cell.object = object
-    # добавить условие для деревьев, если на них наступит человек
 
 
 def tree_spreading(count=0):
@@ -233,13 +294,14 @@ def tree_spreading(count=0):
             f = sample(dot.friends, k)
             for cell in f:
                 if cell and dots_copy[cell].land != 0:
-                    change_object(dots_copy[cell], 'tree')
+                    dots_copy[cell].change_object('tree')
     dots = dots_copy
 
 
 class GameSprite():
 
-    def __init__(self, x, y, x_cord, y_cord, land, state, object, colors, friends, count, text=''):
+    def __init__(self, x, y, x_cord, y_cord, land, state, object, colors, friends, id, defense, text=''):
+        self.defense = defense
         self.colors = colors
         self.state = state
         self.land = land
@@ -250,7 +312,7 @@ class GameSprite():
         self.y_cord = y_cord
         self.a = A
         self.object = object
-        self.count = count
+        self.id = id
         self.point1 = (x + A, y)
         self.point4 = (x - A, y)
         self.point2 = (x + (A / 2), y + ((A * (3 ** 0.5)) / 2))
@@ -303,14 +365,21 @@ class GameSprite():
             window.blit(tree_shadow_image, (self.x - 26, self.y - 22))
             window.blit(tree_image, (self.x - 19, self.y - 30))
         if digits:
-            text = f1.render(str(self.count), True, (156, 156, 1))
+            text = f1.render(str(self.id), True, (156, 156, 1))
             place = text.get_rect(center=(self.x, self.y))
             window.blit(text, place)
 
-    def inside(self, x, y):
+    def set_defense(self):
+        if self.object in defense_objects:
+            dfs_list = dfs_defense(self.id)
+            for i in dfs_list:
+                # if dots[i].defense >= self.defense:
+                dots[i].defense = self.defense
+            # print(i, dots[i].defense, self.defense)
+    def inside(self, x, y):  # dev function
         return self.rect.collidepoint(x, y)
 
-    def change(self, way):
+    def change(self, way='simple'):
         if way == 'simple':
             if self.land == 0:
                 self.object = ''
@@ -325,6 +394,27 @@ class GameSprite():
             if self.object == '':
                 self.object = 'tree'
 
+    def change_object(self, object):
+        if object != 'peasant' and object != 'knight' and object != 'lord':
+            if self.object == '':
+                self.object = object
+                if object == 'tower':
+                    self.defense = 2
+                    for i in self.friends:
+                        dots[i].defense = 2
+        else:
+            if self.object == '' or self.object == 'tree':
+                self.object = object
+                if object == 'knight':
+                    self.defense = 1
+                if object == 'lord':
+                    self.defense = 2
+            elif self.object == 'peasant' and object == 'peasant':
+                self.object = 'knight'
+                self.defense = 1
+            elif (self.object == 'peasant' and object == 'knight') or (self.object == 'knight' and object == 'peasant'):
+                self.object = 'lord'
+                self.defense = 2
 
 
 window = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
@@ -345,7 +435,10 @@ manager = pygame_gui.UIManager((WIN_WIDTH, WIN_HEIGHT))
 music_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((5, WIN_HEIGHT - 45), (90, 40)),
                                             text='Music OFF',
                                             manager=manager)
-print(music_button.colours)
+
+
+# print(music_button.colours)
+
 # music_button.colours['normal_bg'][0] = 76
 # music_button.colours['normal_bg'][1] = 24
 # music_button.colours['normal_bg'][2] = 24
@@ -355,16 +448,32 @@ def pause(self, button):
     if e.type == pygame_gui.UI_BUTTON_PRESSED:
         if e.ui_element == button:
             if pg.mixer.music.get_busy():
-                 pg.mixer.music.pause()
-                 button.set_text('Music ON')
+                pg.mixer.music.pause()
+                button.set_text('Music ON')
             else:
                 pg.mixer.music.unpause()
                 button.set_text('Music OFF')
+
+
+
+# def field_init():
+#     global dots
+#     for i in range(156):
+#         dot = dot_init(i)
+#         dots.append(dot)
+#     for dot in dots:
+#         dot.set_defense()
+#
+# dots = field_init()
+
 
 dots = []
 for i in range(156):
     dot = dot_init(i)
     dots.append(dot)
+for dot in dots:
+    dot.set_defense()
+
 
 if music:
     pg.mixer.music.load(tracks[randint(0, len(tracks) - 1)])
@@ -373,22 +482,33 @@ if music:
 
 
 # Как работает DFS
-def dfs_show(start, depth):
-    dfs_list = dfs(start, depth)
+def dfs_show(start, depth, mode):
+    if mode == 'defense':
+        dfs_list = dfs_defense(start)
+    elif move == 'moves':
+        dfs_list = dfs_moves(start, depth)
     dots[start].color = (dots[start].color[0] + 75, dots[start].color[1] + 75, dots[start].color[2] + 75)
     for i in dfs_list:
         dots[i].color = (dots[i].color[0] + 45, dots[i].color[1] + 45, dots[i].color[2] + 45)
         dots[i].reset()
 
 
-dfs_show(117, 3)
+player1 = Players(dots, 1, 1)
+player1.move(142, 130)
+
+print(dots[124].defense)
+
+# dfs_show(136, 3, 'defense')
+# dfs_show(25, 3, 'move')
+
+for dot in dots:
+    print(dot.id, dot.defense)
 
 while game:
     time_delta = clock.tick(60) / 1000
     for e in pg.event.get():
         if e.type == pg.QUIT:
             game = False
-
         pause(e, music_button)
 
         if dev and Dev.dev_mode(e):
