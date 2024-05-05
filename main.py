@@ -10,8 +10,6 @@ from game_render import (flag_red_image, flag_blue_image, house_image, tower_ima
                          tree_shadow_image, flag_shadow_image, icon, background_image, background_color, main_color,
                          state_colors, f1, tracks)
 
-# from dev import Dev
-
 pg.init()
 pg.display.set_icon(icon)
 
@@ -399,8 +397,8 @@ class GameSprite():
             window.blit(house_shadow_image, (self.x - 30, self.y - 20))
             window.blit(house_image, (self.x - 15, self.y - 22))
         elif self.object == 'tower':
-            window.blit(tower_shadow_image, (self.x - 29, self.y - 19))
-            window.blit(tower_image, (self.x - 22, self.y - 34))
+            window.blit(tower_shadow_image, (self.x - 29, self.y - 20))
+            window.blit(tower_image, (self.x - 21, self.y - 34))
         elif self.object == 'peasant':
             window.blit(person_shadow_image, (self.x - 19, self.y - 16))
             window.blit(peasant_image, (self.x - 18, self.y - 27))
