@@ -26,6 +26,8 @@ moving_objects = ['peasant', 'knight', 'lord']
 static_objects = ['house', 'tree', 'tower']
 defense_objects = ['flag', 'tower', 'peasant', 'knight', 'lord']
 
+# class GameProcess:
+    
 
 class Players:
 
@@ -187,10 +189,14 @@ class Dev:
                 dot.change()
 
 
-def dfs_moves(cell, depth=3, visited=None, ally=True, origin=None):
+def dfs_moves(cell, depth=3, visited=None, ally=True, origin=None, attack=0):
     global dots
     friends = set()
-    if origin is None: origin = dots[cell].state
+    if attack == 0:
+        if dots[cell].object == 'peasant': attack = 1
+        elif dots[cell].object == 'knight': attack = 2
+        elif dots[cell].object == 'lord': attack = 3
+    if origin is None: origin = dots[cell]
     if visited is None: visited = set()
     if dots[cell].state == 0:
         ally = False
@@ -199,15 +205,15 @@ def dfs_moves(cell, depth=3, visited=None, ally=True, origin=None):
 
     if depth >= 0:
         depth -= 1
-        if cell:
+        if cell and origin.object in moving_objects:
             for friend in dots[cell].friends:
-                if ally:
+                if ally and (dots[friend].defense < attack or dots[friend].state == origin.state):
                     for n_friend in dots[friend].friends:
-                        if dots[n_friend].state == origin:
+                        if dots[n_friend].state == origin.state:
                             friends.add(friend)
             visited.add(cell)
         for next in friends:
-            dfs_moves(next, depth, visited, ally, origin)
+            dfs_moves(next, depth, visited, ally, origin, attack)
     return visited
 
 
@@ -226,6 +232,29 @@ def dfs_defense(cell, depth=1, visited=None, origin=None):
         for next in friends:
             dfs_defense(next, depth, visited, origin)
     return visited
+
+# def dfs_able_to_move(cell, depth=3, visited=None, ally=True, origin=None):
+#     global dots
+#     friends = set()
+#     if origin is None: origin = dots[cell].state
+#     if visited is None: visited = set()
+#     if dots[cell].state == 0:
+#         ally = False
+#     else:
+#         ally = True
+#
+#     if depth >= 0:
+#         depth -= 1
+#         if cell:
+#             for friend in dots[cell].friends:
+#                 if ally:
+#                     for n_friend in dots[friend].friends:
+#                         if dots[n_friend].state == origin:
+#                             friends.add(friend)
+#             visited.add(cell)
+#         for next in friends:
+#             dfs_moves(next, depth, visited, ally, origin)
+#     return visited
 
 
 def change_land(xm, ym):
@@ -544,8 +573,8 @@ player1.move(130, 130)
 
 print(dots[130].object)
 
-dfs_show(136, 3, 'defense')
-dfs_show(25, 3, 'moves')
+# dfs_show(136, 3, 'defense')
+dfs_show(141, 3, 'moves')
 
 while game:
     time_delta = clock.tick(60) / 1000
