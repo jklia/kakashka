@@ -14,7 +14,7 @@ pg.init()
 pg.display.set_icon(icon)
 
 WIN_WIDTH = 574
-# Изначально 730
+# Без кнопки 730
 WIN_HEIGHT = 780
 X = 40
 Y = 40
@@ -23,7 +23,7 @@ MAP_WIDTH = 6
 
 objects = ['flag', 'house', 'lord', 'peasant', 'knight', 'tree', 'tower']
 moving_objects = ['peasant', 'knight', 'lord']
-static_objects = ['house', 'tree', 'tower']
+static_objects = ['house', 'tree', 'tower', 'flag']
 defense_objects = ['flag', 'tower', 'peasant', 'knight', 'lord']
 
 # class GameProcess:
@@ -55,9 +55,6 @@ class Players:
         self.field[cell].defense = 0
 
     def move(self, cell, dest):
-        print(self.state)
-        print(self.field[cell].state)
-        print(self.field[dest].state)
         if (self.field[cell].object in moving_objects) and (
                 self.field[dest].object not in static_objects or self.field[dest].object == 'tree') and cell != dest and self.field[cell].state == self.state:
             if dest in dfs_moves(cell):
@@ -563,7 +560,7 @@ player1 = Players(dots, 1)
 player2 = Players(dots, 2)
 
 player1.move(118, 129)
-player2.move(129, 141)
+player2.move(141, 154)
 
 while game:
     time_delta = clock.tick(60) / 1000
