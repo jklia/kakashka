@@ -31,9 +31,8 @@ defense_objects = ['flag', 'tower', 'peasant', 'knight', 'lord']
 
 class Players:
 
-    def __init__(self, field, id, state, money=10):
+    def __init__(self, field, state, money=10):
         self.field = field
-        self.id = id
         self.state = state
         self.money = money
 
@@ -56,14 +55,25 @@ class Players:
         self.field[cell].defense = 0
 
     def move(self, cell, dest):
-        # добавить условия по дфсу, сделать дфс для досту
+        print(self.state)
+        print(self.field[cell].state)
+        print(self.field[dest].state)
         if (self.field[cell].object in moving_objects) and (
-                self.field[dest].object not in static_objects or self.field[dest].object == 'tree') and cell != dest:
-            self.field[dest].change_object(self.field[cell].object)
-            self.field[dest].state = self.field[cell].state
-            self.default(cell)
-            self.field[dest].change()
-            self.field[cell].change()
+                self.field[dest].object not in static_objects or self.field[dest].object == 'tree') and cell != dest and self.field[cell].state == self.state:
+            if dest in dfs_moves(cell):
+                if self.field[dest].state == self.field[cell].state:
+                    self.field[dest].change_object(self.field[cell].object)
+                else:
+                    self.field[dest].object = self.field[cell].object
+                    self.field[dest].defense = self.field[cell].defense
+                    self.field[dest].state = self.field[cell].state
+                self.default(cell)
+                self.field[dest].change()
+                self.field[cell].change()
+            else:
+                print(f'No moves from point {cell} to {dest} as player {self.state}')
+        else:
+            print(f'No moves from point {cell} to {dest} as player {self.state}')
 
     def build(self, object, cell):
         near = 0
@@ -212,6 +222,8 @@ def dfs_moves(cell, depth=3, visited=None, ally=True, origin=None, attack=0):
                         if dots[n_friend].state == origin.state:
                             friends.add(friend)
             visited.add(cell)
+        elif origin.object in static_objects:
+            return visited
         for next in friends:
             dfs_moves(next, depth, visited, ally, origin, attack)
     return visited
@@ -232,29 +244,6 @@ def dfs_defense(cell, depth=1, visited=None, origin=None):
         for next in friends:
             dfs_defense(next, depth, visited, origin)
     return visited
-
-# def dfs_able_to_move(cell, depth=3, visited=None, ally=True, origin=None):
-#     global dots
-#     friends = set()
-#     if origin is None: origin = dots[cell].state
-#     if visited is None: visited = set()
-#     if dots[cell].state == 0:
-#         ally = False
-#     else:
-#         ally = True
-#
-#     if depth >= 0:
-#         depth -= 1
-#         if cell:
-#             for friend in dots[cell].friends:
-#                 if ally:
-#                     for n_friend in dots[friend].friends:
-#                         if dots[n_friend].state == origin:
-#                             friends.add(friend)
-#             visited.add(cell)
-#         for next in friends:
-#             dfs_moves(next, depth, visited, ally, origin)
-#     return visited
 
 
 def change_land(xm, ym):
@@ -568,13 +557,13 @@ def dfs_show(start, depth, mode):
         dots[i].reset()
 
 
-player1 = Players(dots, 1, 1)
-player1.move(130, 130)
+# 1 - красные, 2 - синие
 
-print(dots[130].object)
+player1 = Players(dots, 1)
+player2 = Players(dots, 2)
 
-# dfs_show(136, 3, 'defense')
-dfs_show(141, 3, 'moves')
+player1.move(118, 129)
+player2.move(129, 141)
 
 while game:
     time_delta = clock.tick(60) / 1000
