@@ -1,17 +1,21 @@
-import copy
-from random import sample, choice, randint
-from time import time
+# from scripts.config import (WIN_WIDTH, WIN_HEIGHT, MAP_WIDTH, X, Y, A, FPS, delay, dev_flag, digits_flag, bots_flag,
+#                             music_flag, game, field)
+#
+# from scripts.misc import (flag_red_image, flag_blue_image, house_image, tower_image, knight_image, peasant_image,
+#                           lord_image, tree_image, person_shadow_image, house_shadow_image, tower_shadow_image,
+#                           tree_shadow_image, flag_shadow_image, icon, background_image, background_color, main_color,
+#                           state_colors, f1, tracks)
+# import os
+# import copy
+# from random import sample, choice, randint
+# from time import time
+#
+# import pygame as pg
+# import pygame_gui
+# from pygame import gfxdraw
 
-import pygame as pg
-import pygame_gui
-from pygame import gfxdraw
-
-from scripts.config import (WIN_WIDTH, WIN_HEIGHT, MAP_WIDTH, X, Y, A, FPS, delay, dev_flag, digits_flag, bots_flag,
-                            music_flag, game, field)
-from scripts.misc import (flag_red_image, flag_blue_image, house_image, tower_image, knight_image, peasant_image,
-                          lord_image, tree_image, person_shadow_image, house_shadow_image, tower_shadow_image,
-                          tree_shadow_image, flag_shadow_image, icon, background_image, background_color, main_color,
-                          state_colors, f1, tracks)
+from scripts.misc import *
+from scripts.config import *
 
 # pip install -r requirements.txt
 
@@ -96,8 +100,8 @@ class Players:
                         near = True
                         break
                 if near:
-                    if self.field[cell].blocked == 1 or self.field[cell].state != self.state or self.field[
-                        cell].object == 'tree':
+                    if self.field[cell].blocked == 1 or self.field[cell].state != self.state or \
+                            self.field[cell].object == 'tree':
                         block = 1
                     elif self.field[cell].blocked == 0 or (
                             self.field[cell].state == self.state and self.field[cell].object == ''):
@@ -120,7 +124,8 @@ class Players:
                             print(f'Not enough money ({self.money}) for {object} or another problem')
                     elif object == 'knight':
                         if (self.money >= 20 and self.field[cell].state != self.state and self.field[
-                            cell].defense <= 0) or (self.money >= 20 and self.field[cell].state == self.state):
+                            cell].defense <= 0) or \
+                                (self.money >= 20 and self.field[cell].state == self.state):
                             if self.field[cell].state != self.state:
                                 self.field[cell].object = ''
                                 self.field[cell].state = self.state
@@ -135,7 +140,8 @@ class Players:
                             print(f'Not enough money ({self.money}) for {object} or another problem')
                     elif object == 'lord':
                         if (self.money >= 30 and self.field[cell].state != self.state and self.field[
-                            cell].defense <= 0) or (self.money >= 30 and self.field[cell].state == self.state):
+                            cell].defense <= 0) or (
+                                self.money >= 30 and self.field[cell].state == self.state):
                             if self.field[cell].state != self.state:
                                 self.field[cell].object = ''
                                 self.field[cell].state = self.state

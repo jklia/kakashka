@@ -1,4 +1,4 @@
-from scripts.fields import Fields
+from misc import *
 
 FPS = 60
 delay = 1
