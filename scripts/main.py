@@ -5,6 +5,7 @@
 #                           lord_image, tree_image, person_shadow_image, house_shadow_image, tower_shadow_image,
 #                           tree_shadow_image, flag_shadow_image, icon, background_image, background_color, main_color,
 #                           state_colors, f1, tracks)
+#
 # import os
 # import copy
 # from random import sample, choice, randint
