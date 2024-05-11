@@ -13,6 +13,8 @@ from scripts.misc import (flag_red_image, flag_blue_image, house_image, tower_im
                           tree_shadow_image, flag_shadow_image, icon, background_image, background_color, main_color,
                           state_colors, f1, tracks)
 
+# pip install -r requirements.txt
+
 pg.init()
 pg.display.set_icon(icon)
 clock = pg.time.Clock()
