@@ -51,7 +51,7 @@ class Players:
 
     def move(self, cell, dest):
         if (self.field[cell].object in moving_objects) and cell != dest and self.field[
-            cell].state == self.state and dest in dfs_moves(dots, cell) and self.field[cell].blocked != 1:
+            cell].state == self.state and dest in dfs_moves(self.field, cell) and self.field[cell].blocked != 0:
             if self.field[dest].state == self.field[cell].state:
                 if self.field[dest].object not in static_objects or self.field[dest].object == 'tree':
                     self.field[dest].change_object(self.field[cell].object)
@@ -67,9 +67,10 @@ class Players:
             self.field[cell].change()
         else:
             print(f'No moves from point {cell} to {dest} as player with state {['red', 'blue'][self.state-1]} {self.field[cell].blocked}')
-
+            print(self.field[cell].object in moving_objects, cell != dest, self.field[
+            cell].state == self.state, dest in dfs_moves(self.field, cell), self.field[cell].blocked != 1)
     def build(self, object, cell):
-        near = 0
+        near = False
         block = 0
         if self.field[cell].land:
             if object == 'house':
@@ -87,9 +88,9 @@ class Players:
             else:
                 for i in self.field[cell].friends:
                     if self.field[i].state == self.state:
-                        near = 1
+                        near = True
                         break
-                if near == 1:
+                if near:
                     if self.field[cell].blocked == 1 or self.field[cell].state != self.state or self.field[
                         cell].object == 'tree':
                         block = 1
@@ -158,21 +159,8 @@ class GameProcess():
                         list_to_move = moves_list
                     print(cell.id, list_to_move)
                     player.move(cell.id, choice(list_to_move))
-                # for i in cell.friends:
-                # # for i in dfs_moves(self.field, cell.id):
-                # # хз почему не работает если заменить на это
-                #     if self.field[i].state == 0:
-                #         player.build(choice(['peasant', 'knight', 'house', 'tower', 'lord']), i)
-                #         print(player.money)
-                #         c = 1
-                #         break
-                # комментишь эту часть и все норм
-                # elif self.field[i].state == cell.state:
-                #     print('housing')
-                #     player.build(choice(['house', 'tower']), i)
-                #     print(player.money, i, player.state)
-                #     c = 1
-                #     break
+                    c = 1
+                    break
             if c == 1:
                 break
 
@@ -499,7 +487,7 @@ class GameSprite():
             window.blit(tree_image, (self.x - 19, self.y - 30))
         if digits:
             text = f1.render(str(self.id), True, (196, 196, 30))
-            text.set_alpha(190)
+            text.set_alpha(210)
             text_shadow = f1.render(str(self.id), True, (0, 0, 0))
             text_shadow.set_alpha(190)
             place = text.get_rect(center=(self.x, self.y))
@@ -670,8 +658,8 @@ def dfs_show(start, mode):
 # player1 - красные, player2 - синие
 dots = dots_init()
 dots = set_defense(dots_init())
-player1 = Players(dots, 1, 100000)
-player2 = Players(dots, 2, 100000)
+player1 = Players(dots, 1, 100)
+player2 = Players(dots, 2, 100)
 gp = GameProcess([player1, player2], dots)
 
 player1.move(139, 109)
