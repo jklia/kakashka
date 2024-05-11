@@ -1,3 +1,5 @@
+from random import choice
 
-f = [1, 2, 3, False, False]
-cf = f.copy()
+choice = choice(['peasant', 'knight', 'house'])
+
+print(choice)
