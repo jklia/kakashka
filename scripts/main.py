@@ -8,7 +8,7 @@ pg.display.set_icon(icon)
 clock = pg.time.Clock()
 
 window = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
-pg.display.set_caption("Antiyoy")
+pg.display.set_caption("Antiyoy Продам гараж")
 
 objects = ['flag', 'house', 'lord', 'peasant', 'knight', 'tree', 'tower']
 moving_objects = ['peasant', 'knight', 'lord']
@@ -39,28 +39,39 @@ class Players:
                     self.money -= 18
 
     def move(self, cell, dest):
+        available_move_flag = True
         if (self.field[cell].object in moving_objects) and cell != dest and self.field[cell].state == self.state and \
                 dest in dfs_moves(self.field, cell) and self.field[cell].blocked == 0:
             if self.field[dest].state == self.field[cell].state:
-                if self.field[dest].object not in static_objects or self.field[dest].object == 'tree':
-                    self.field[dest].change_object(self.field[cell].object)
+                if self.field[dest].object not in ['house', 'flag', 'tower']:
+                    if self.field[dest].object == 'lord' or (
+                            self.field[dest].object == 'knight' and self.field[cell].object in ['knight', 'lord']) or (
+                            self.field[dest].object == 'peasant' and self.field[cell].object == 'lord'):
+                        print(
+                            f'No moves from point {cell} to {dest} as player with state {['red', 'blue'][self.state - 1]} #1')
+                        available_move_flag = False
+                    else:
+                        self.field[dest].change_object(self.field[cell].object)
                 else:
                     print(
-                        f'No moves from point {cell} to {dest} as player with state {['red', 'blue'][self.state - 1]}')
+                        f'No moves from point {cell} to {dest} as player with state {['red', 'blue'][self.state - 1]} #2')
+                    available_move_flag = False
             else:
                 self.field[dest].object = self.field[cell].object
                 self.field[dest].state = self.field[cell].state
-            self.field[cell].object = ''
-            self.field[cell].change_object('block0')
-            self.field[dest].change_object('block1')
-            self.field[dest].change()
-            self.field[cell].change()
+
+            if available_move_flag:
+                self.field[cell].object = ''
+                self.field[cell].change_object('block0')
+                self.field[dest].change_object('block1')
+                self.field[dest].change()
+                self.field[cell].change()
         else:
             print(
-                f'No moves from point {cell} to {dest} as player with state {['red', 'blue'][self.state - 1]}')
+                f'No moves from point {cell} to {dest} as player with state {['red', 'blue'][self.state - 1]} #3')
 
-            print(self.field[cell].object in moving_objects, cell != dest, self.field[
-                cell].state == self.state, dest in dfs_moves(self.field, cell), self.field[cell].blocked != 1)
+            # print(self.field[cell].object in moving_objects, cell != dest, self.field[
+            #     cell].state == self.state, dest in dfs_moves(self.field, cell), self.field[cell].blocked != 1)
 
     def build(self, object, cell):
         near = False
@@ -155,7 +166,12 @@ class GameProcess:
             # print(cell.id, cell.state)
             if cell.state == player.state:
                 if cell.object == '':
-                    choice_object = choice(['peasant', 'knight', 'house', 'tower', 'lord'])
+                    # choice_object = choice(
+                    #     ['peasant', 'peasant', 'peasant', 'peasant', 'peasant', 'knight', 'knight', 'knight',
+                    #      'house', 'house', 'house', 'house', 'house', 'house', 'tower', 'tower', 'tower', 'lord', 'lord', 'lord', 'lord', 'lord',
+                    #      'lord'])
+                    choice_object = choice(
+                        ['peasant', 'knight', 'house', 'tower', 'lord'])
                     player.build(choice_object, cell.id)
                     print('BUILD', cell.state, cell.id, choice_object)
                 elif cell.object in moving_objects:
@@ -586,7 +602,7 @@ freezer_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH -
 
 if music_flag:
     pg.mixer.music.load(tracks[randint(0, len(tracks) - 1)])
-    pg.mixer.music.set_volume(0.2)  # чтобы вернуть поставить на 0.2 - 0.3
+    pg.mixer.music.set_volume(music_volume)
     pg.mixer.music.play(-1)
 
 # player1 - красные, player2 - синие
@@ -638,4 +654,3 @@ while game:
 
     pg.display.update()
     clock.tick(FPS)
-
