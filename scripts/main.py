@@ -1,21 +1,3 @@
-#
-# from scripts.config import (WIN_WIDTH, WIN_HEIGHT, MAP_WIDTH, X, Y, A, FPS, delay, dev_flag, digits_flag, bots_flag,
-#                             music_flag, game, field)
-#
-# from scripts.misc import (flag_red_image, flag_blue_image, house_image, tower_image, knight_image, peasant_image,
-#                           lord_image, tree_image, person_shadow_image, house_shadow_image, tower_shadow_image,
-#                           tree_shadow_image, flag_shadow_image, icon, background_image, background_color, main_color,
-#                           state_colors, f1, tracks)
-#
-# import os
-# import copy
-# from random import sample, choice, randint
-# from time import time
-#
-# import pygame as pg
-# import pygame_gui
-# from pygame import gfxdraw
-
 from scripts.misc import *
 from scripts.config import *
 
@@ -223,93 +205,6 @@ class GameProcess:
             if (time // delay) != self.sec_counter:
                 self.bots()
                 self.sec_counter = time // delay
-
-
-class Dev:
-    def dev_mode(self, e):
-        break_flag = False
-        if e.type == pg.QUIT:
-            break_flag = True
-        elif e.type == pg.MOUSEBUTTONDOWN:
-            if e.button == 1:
-                xm, ym = e.pos
-                for dot in dots:
-                    if dot.inside(xm, ym):
-                        dot.state = 1
-                        dot.change()
-                        break_flag = True
-            if e.button == 2:
-                xm, ym = e.pos
-                for dot in dots:
-                    if dot.inside(xm, ym):
-                        dot.state = 0
-                        dot.change()
-                        break_flag = True
-            if e.button == 3:
-                xm, ym = e.pos
-                for dot in dots:
-                    if dot.inside(xm, ym):
-                        dot.state = 2
-                        dot.change()
-                        break_flag = True
-
-        elif e.type == pg.KEYDOWN:
-            if e.key == pg.K_g:
-                xm, ym = pg.mouse.get_pos()
-                self.dev_change_land(xm, ym)
-                break_flag = True
-            elif e.key == pg.K_f:
-                xm, ym = pg.mouse.get_pos()
-                self.dev_change_object(xm, ym, 'flag')
-                break_flag = True
-            elif e.key == pg.K_h:
-                xm, ym = pg.mouse.get_pos()
-                self.dev_change_object(xm, ym, 'house')
-                break_flag = True
-            elif e.key == pg.K_j:
-                xm, ym = pg.mouse.get_pos()
-                for dot in dots:
-                    if dot.inside(xm, ym):
-                        if dot.object == '':
-                            self.dev_change_object(xm, ym, 'peasant')
-                        elif dot.object == 'peasant':
-                            self.dev_change_object(xm, ym, 'knight')
-                        elif dot.object == 'knight':
-                            self.dev_change_object(xm, ym, 'lord')
-                        elif dot.object == 'lord':
-                            self.dev_change_object(xm, ym, '')
-                        else:
-                            self.dev_change_object(xm, ym, 'peasant')
-                break_flag = True
-            elif e.key == pg.K_t:
-                xm, ym = pg.mouse.get_pos()
-                self.dev_change_object(xm, ym, 'tree')
-                break_flag = True
-            elif e.key == pg.K_y:
-                xm, ym = pg.mouse.get_pos()
-                self.dev_change_object(xm, ym, 'tower')
-                break_flag = True
-        return break_flag
-
-    @staticmethod
-    def dev_change_object(xm, ym, object):
-        for dot in dots:
-            if dot.inside(xm, ym):
-                if dot.object == object and dot.object:
-                    dot.object = ''
-                else:
-                    dot.object = object
-                dot.change()
-
-    @staticmethod
-    def dev_change_land(xm, ym):
-        for dot in dots:
-            if dot.inside(xm, ym):
-                if dot.land == 1:
-                    dot.land = 0
-                else:
-                    dot.land = 1
-                dot.change()
 
 
 def dfs_moves(dots, cell, depth=3, visited=None, origin=None, attack=0):
@@ -591,18 +486,6 @@ class GameSprite:
         return defense
 
 
-manager = pygame_gui.UIManager((WIN_WIDTH, WIN_HEIGHT))
-
-music_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 141, WIN_HEIGHT - 45), (131, 40)),
-                                            text='Music OFF', manager=manager)
-bots_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 282, WIN_HEIGHT - 45), (131, 40)),
-                                           text='Bots OFF', manager=manager)
-digits_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 423, WIN_HEIGHT - 45), (131, 40)),
-                                             text='Digits OFF', manager=manager)
-freezer_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 564, WIN_HEIGHT - 45), (131, 40)),
-                                              text='Unfreeze', manager=manager)
-
-
 def bots_pause(e, button):
     global bots_flag
     if e.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -627,12 +510,15 @@ def digits_show(e, button):
                 button.set_text('Digits OFF')
 
 
+orig_delay = delay
+
+
 def freeze(e, button):
     global delay
     if e.type == pygame_gui.UI_BUTTON_PRESSED:
         if e.ui_element == button:
             if delay == 0:
-                delay = 1
+                delay = orig_delay
                 button.set_text('Unfreeze')
             else:
                 delay = 0
@@ -649,12 +535,6 @@ def music_pause(e, button):
             else:
                 pg.mixer.music.unpause()
                 button.set_text('Music OFF')
-
-
-if music_flag:
-    pg.mixer.music.load(tracks[randint(0, len(tracks) - 1)])
-    pg.mixer.music.set_volume(0.2)  # чтобы вернуть поставить на 0.2 - 0.3
-    pg.mixer.music.play(-1)
 
 
 def dots_init():
@@ -693,13 +573,28 @@ def dfs_show(start, mode, dfs_list=None):
             dots[i].reset()
 
 
+manager = pygame_gui.UIManager((WIN_WIDTH, WIN_HEIGHT))
+
+music_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 141, WIN_HEIGHT - 45), (131, 40)),
+                                            text='Music OFF', manager=manager)
+bots_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 282, WIN_HEIGHT - 45), (131, 40)),
+                                           text='Bots OFF', manager=manager)
+digits_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 423, WIN_HEIGHT - 45), (131, 40)),
+                                             text='Digits OFF', manager=manager)
+freezer_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 564, WIN_HEIGHT - 45), (131, 40)),
+                                              text='Unfreeze', manager=manager)
+
+if music_flag:
+    pg.mixer.music.load(tracks[randint(0, len(tracks) - 1)])
+    pg.mixer.music.set_volume(0.2)  # чтобы вернуть поставить на 0.2 - 0.3
+    pg.mixer.music.play(-1)
+
 # player1 - красные, player2 - синие
 dots = set_defense(dots_init())
 player1 = Players(dots, 1, 10000)
 player2 = Players(dots, 2, 10000)
 gp = GameProcess([player1, player2], dots)
-dev = Dev()
-#
+
 # player1.move(130, 136)
 # dots = set_defense(dots)
 # player1 = Players(dots, 1)
@@ -711,23 +606,26 @@ dev = Dev()
 # player2 = Players(dots, 2)
 
 starting_timer = time()
+game = True
+
 while game:
     time_delta = clock.tick(FPS) / 1000
     for e in pg.event.get():
         if e.type == pg.QUIT:
             game = False
+
         music_pause(e, music_button)
         bots_pause(e, bots_button)
         digits_show(e, digits_button)
         freeze(e, freezer_button)
-        if dev_flag and dev.dev_mode(e):
-            break
+
         manager.process_events(e)
+
     manager.update(time_delta)
     window.blit(background_image, (0, 0))
     manager.draw_ui(window)
 
-    # Нагрузка на игру:
+    # Стресс-тест игры:
     #
     # listw = []
     # for i in range(1, 1000):
@@ -736,14 +634,8 @@ while game:
 
     ending_timer = time()
     timing = ending_timer - starting_timer
-    gp.main(timing, delay)
-    # 0 без ограничений, > 0 — задержка хода
+    gp.main(timing, delay)  # 0 без ограничений, > 0 — задержка хода
 
     pg.display.update()
     clock.tick(FPS)
 
-if dev_flag:
-    new_map = []
-    for dot in dots:
-        new_map.append((dot.land, dot.state, dot.object))
-    print(new_map)
