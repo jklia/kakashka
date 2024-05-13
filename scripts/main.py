@@ -1,14 +1,20 @@
-from scripts.misc import *
-from scripts.config import *
+from misc import *
+from config import *
 
 # pip install -r requirements.txt
+
+# Спросить почему music_flag, digits_flag итд подсвечиваются с ошибками
+# (Global variable 'bots_flag' is undefined at the module level)
+
+# Почему delay с ошибкой? (name 'delay' can be undefined)
+
 
 pg.init()
 pg.display.set_icon(icon)
 clock = pg.time.Clock()
 
 window = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
-pg.display.set_caption("Antiyoy Продам гараж")
+pg.display.set_caption("Antiyoy")
 
 objects = ['flag', 'house', 'lord', 'peasant', 'knight', 'tree', 'tower']
 moving_objects = ['peasant', 'knight', 'lord']
@@ -361,19 +367,20 @@ def dot_init(i):
                               field[i][1], field[i][2], state_colors, friends, i, defense, blocked)
 
 
-def tree_spreading(dots):
-    j = randint(1, 4)
-    dots_copy = copy.deepcopy(dots)
-    if j != 1:
-        return dots_copy
-    if dot.object == 'tree':
-        k = randint(1, 4)
-        if k == 1:
-            f = sample(dot.friends, k)
-            for cell in f:
-                if cell and dots_copy[cell].land != 0:
-                    dots_copy[cell].change_object('tree')
-    return dots_copy
+# что такое dot? нужно исправить
+# def tree_spreading(dots):
+#     j = randint(1, 4)
+#     dots_copy = copy.deepcopy(dots)
+#     if j != 1:
+#         return dots_copy
+#     if dot.object == 'tree':
+#         k = randint(1, 4)
+#         if k == 1:
+#             f = sample(dot.friends, k)
+#             for cell in f:
+#                 if cell and dots_copy[cell].land != 0:
+#                     dots_copy[cell].change_object('tree')
+#     return dots_copy
 
 
 class GameSprite:
@@ -531,6 +538,7 @@ orig_delay = delay
 
 def freeze(e, button):
     global delay
+    global orig_delay
     if e.type == pygame_gui.UI_BUTTON_PRESSED:
         if e.ui_element == button:
             if delay == 0:
@@ -577,7 +585,7 @@ def set_defense(dots):
 
 
 # Как работает DFS
-def dfs_show(start, mode, dfs_list=None):
+def dfs_show(dots, start, mode, dfs_list=None):
     if mode == 'defense':
         dfs_list = dfs_defense(dots, start)
     elif mode == 'moves':
@@ -589,68 +597,63 @@ def dfs_show(start, mode, dfs_list=None):
             dots[i].reset()
 
 
-manager = pygame_gui.UIManager((WIN_WIDTH, WIN_HEIGHT))
+def game_init():
+    manager = pygame_gui.UIManager((WIN_WIDTH, WIN_HEIGHT))
 
-music_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 141, WIN_HEIGHT - 45), (131, 40)),
-                                            text='Music OFF', manager=manager)
-bots_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 282, WIN_HEIGHT - 45), (131, 40)),
-                                           text='Bots OFF', manager=manager)
-digits_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 423, WIN_HEIGHT - 45), (131, 40)),
-                                             text='Digits OFF', manager=manager)
-freezer_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 564, WIN_HEIGHT - 45), (131, 40)),
-                                              text='Unfreeze', manager=manager)
+    music_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 141, WIN_HEIGHT - 45), (131, 40)),
+                                                text='Music OFF', manager=manager)
+    bots_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 282, WIN_HEIGHT - 45), (131, 40)),
+                                               text='Bots OFF', manager=manager)
+    digits_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 423, WIN_HEIGHT - 45), (131, 40)),
+                                                 text='Digits OFF', manager=manager)
+    freezer_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 564, WIN_HEIGHT - 45), (131, 40)),
+                                                  text='Unfreeze', manager=manager)
 
-if music_flag:
-    pg.mixer.music.load(tracks[randint(0, len(tracks) - 1)])
-    pg.mixer.music.set_volume(music_volume)
-    pg.mixer.music.play(-1)
+    if music_flag:
+        pg.mixer.music.load(tracks[randint(0, len(tracks) - 1)])
+        pg.mixer.music.set_volume(music_volume)
+        pg.mixer.music.play(-1)
 
-# player1 - красные, player2 - синие
-dots = set_defense(dots_init())
-player1 = Players(dots, 1, 10000)
-player2 = Players(dots, 2, 10000)
-gp = GameProcess([player1, player2], dots)
+    # player1 - красные, player2 - синие
+    dots = set_defense(dots_init())
+    player1 = Players(dots, 1, 1000)
+    player2 = Players(dots, 2, 1000)
+    gp = GameProcess([player1, player2], dots)
 
-# player1.move(130, 136)
-# dots = set_defense(dots)
-# player1 = Players(dots, 1)
-# player2 = Players(dots, 2)
-#
-# player2.move(148, 136)
-# dots = set_defense(dots)
-# player1 = Players(dots, 1)
-# player2 = Players(dots, 2)
+    starting_timer = time()
+    game = True
 
-starting_timer = time()
-game = True
+    while game:
+        time_delta = clock.tick(FPS) / 1000
+        for e in pg.event.get():
+            if e.type == pg.QUIT:
+                game = False
 
-while game:
-    time_delta = clock.tick(FPS) / 1000
-    for e in pg.event.get():
-        if e.type == pg.QUIT:
-            game = False
+            music_pause(e, music_button)
+            bots_pause(e, bots_button)
+            digits_show(e, digits_button)
+            freeze(e, freezer_button)
 
-        music_pause(e, music_button)
-        bots_pause(e, bots_button)
-        digits_show(e, digits_button)
-        freeze(e, freezer_button)
+            manager.process_events(e)
 
-        manager.process_events(e)
+        manager.update(time_delta)
+        window.blit(background_image, (0, 0))
+        manager.draw_ui(window)
 
-    manager.update(time_delta)
-    window.blit(background_image, (0, 0))
-    manager.draw_ui(window)
+        # Стресс-тест игры:
+        #
+        # listw = []
+        # for i in range(1, 1000):
+        #     for j in range(i):
+        #         listw.append(j ** 10)
 
-    # Стресс-тест игры:
-    #
-    # listw = []
-    # for i in range(1, 1000):
-    #     for j in range(i):
-    #         listw.append(j ** 10)
+        ending_timer = time()
+        timing = ending_timer - starting_timer
+        gp.main(timing, delay)  # 0 без ограничений, > 0 — задержка хода
 
-    ending_timer = time()
-    timing = ending_timer - starting_timer
-    gp.main(timing, delay)  # 0 без ограничений, > 0 — задержка хода
+        pg.display.update()
+        clock.tick(FPS)
 
-    pg.display.update()
-    clock.tick(FPS)
+
+if __name__ == '__main__':
+    game_init()

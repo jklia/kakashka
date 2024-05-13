@@ -1,8 +1,8 @@
 class Fields:
-    maps = []
+    fields = []
 
     def __init__(self, field):
-        self.maps.append(field)
+        self.fields.append(field)
 
 
 field1 = [(1, 2, 'flag'), (1, 1, 'flag'), (1, 0, ''), (1, 0, ''), (1, 0, ''), (1, 0, ''), (1, 0, ''), (1, 0, ''),

@@ -102,6 +102,16 @@
 #                     dot.land = 1
 #                 dot.change()
 
+# player1.move(130, 136)
+# dots = set_defense(dots)
+# player1 = Players(dots, 1)
+# player2 = Players(dots, 2)
+#
+# player2.move(148, 136)
+# dots = set_defense(dots)
+# player1 = Players(dots, 1)
+# player2 = Players(dots, 2)
+
 # dev = Dev()
 
 # if dev_flag and dev.dev_mode(e):
