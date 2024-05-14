@@ -540,6 +540,7 @@ def digits_show(e, button):
 
 orig_delay = delay
 
+
 def freeze(e, button):
     global delay
     global orig_delay
