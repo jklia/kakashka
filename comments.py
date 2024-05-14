@@ -1,5 +1,7 @@
 #
 
+
+#hghghghghhghghghghghhghhgghghghhghg
 # from scripts.config import (WIN_WIDTH, WIN_HEIGHT, MAP_WIDTH, X, Y, A, FPS, delay, dev_flag, digits_flag, bots_flag,
 #                             music_flag, game, field)
 #
