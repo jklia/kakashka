@@ -30,7 +30,7 @@ class Players:
         self.state = state
         self.money = money
 
-    def count(self):
+    def salary(self):
         for cell in self.field:
             if cell.state == self.state:
                 if cell.object == 'house':
@@ -43,6 +43,11 @@ class Players:
                     self.money -= 6
                 if cell.object == 'lord':
                     self.money -= 18
+
+        if self.money < 0:
+            for cell in self.field:
+                if cell.object in moving_objects:
+                    cell.change_object('')
 
     def move(self, cell, dest):
         available_move_flag = True
@@ -196,10 +201,10 @@ class GameProcess:
                     break
             if count:
                 break
+        # print(player.money)
 
     def game(self):
         for cell in self.field:
-            # self.field = tree_spreading(self.field)
             cell.reset()
         pg.display.update()
 
@@ -215,9 +220,12 @@ class GameProcess:
                     i.change_object('block0')
                 for i in range(len(self.players)):
                     self.players[i] = Players(self.field, i + 1, self.players[i].money)
-                    self.players[i].count()
+                    self.players[i].salary()
                 for cell in self.field:
                     cell.reset()
+            self.field = tree_spreading(self.field)
+            for cell in self.field:
+                cell.reset()
 
     def main(self, time, delay):
         self.game()
@@ -367,20 +375,20 @@ def dot_init(i):
                               field[i][1], field[i][2], state_colors, friends, i, defense, blocked)
 
 
-# что такое dot? нужно исправить
-# def tree_spreading(dots):
-#     j = randint(1, 4)
-#     dots_copy = copy.deepcopy(dots)
-#     if j != 1:
-#         return dots_copy
-#     if dot.object == 'tree':
-#         k = randint(1, 4)
-#         if k == 1:
-#             f = sample(dot.friends, k)
-#             for cell in f:
-#                 if cell and dots_copy[cell].land != 0:
-#                     dots_copy[cell].change_object('tree')
-#     return dots_copy
+def tree_spreading(dots):
+    j = randint(1, 5)
+    dots_copy = copy.deepcopy(dots)
+    if j != 1:
+        return dots_copy
+    else:
+        for dot in dots:
+            if dot.object == 'tree':
+                k = randint(1, 5)
+                if k == 1:
+                    cell = choice(dot.friends)
+                    if cell and dots_copy[cell].land != 0:
+                        dots_copy[cell].change_object('tree')
+        return dots_copy
 
 
 class GameSprite:
@@ -486,6 +494,8 @@ class GameSprite:
                 self.object = object
                 if object == 'tower':
                     self.defense = 2
+            if object == '':
+                self.object = object
         else:
             if self.object == '' or self.object == 'tree':
                 self.object = object
@@ -534,7 +544,6 @@ def digits_show(e, button):
 
 
 orig_delay = delay
-
 
 def freeze(e, button):
     global delay
