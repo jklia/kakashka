@@ -2,6 +2,7 @@ import os
 import pygame as pg
 from config import theme
 
+
 pg.init()
 
 if theme == 'Dark':

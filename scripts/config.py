@@ -7,6 +7,7 @@ import pygame as pg
 import pygame_gui
 from pygame import gfxdraw
 
+
 FPS = 0
 delay = 2 # задержка между ходами в секундах
 
