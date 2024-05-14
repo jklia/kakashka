@@ -47,6 +47,7 @@ class Players:
         if self.money < 0:
             for cell in self.field:
                 if cell.object in moving_objects:
+                    print(f"State {['red', 'blue'][self.state - 1]} is starving")
                     cell.change_object('')
 
     def move(self, cell, dest):
