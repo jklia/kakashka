@@ -1,5 +1,5 @@
 charset-normalizer==3.3.2
 pygame==2.5.2
-pygame-ce==2.4.1
-pygame_gui==0.6.10
+pygame-ce==2.5.0.dev2
+pygame-gui==0.6.10
 python-i18n==0.3.9
