@@ -54,12 +54,12 @@ class Players:
                     if self.field[dest].object == 'lord' or (
                             self.field[dest].object == 'knight' and self.field[cell].object in ['knight', 'lord']) or (
                             self.field[dest].object == 'peasant' and self.field[cell].object == 'lord'):
-                        print(f'No moves from point {cell} to {dest} as player with state {['red', 'blue'][self.state - 1]} #1')
+                        print(f"No moves from point {cell} to {dest} as player with state {['red', 'blue'][self.state - 1]} #1")
                         available_move_flag = False
                     else:
                         self.field[dest].change_object(self.field[cell].object)
                 else:
-                    print(f'No moves from point {cell} to {dest} as player with state {['red', 'blue'][self.state - 1]} #2')
+                    print(f"No moves from point {cell} to {dest} as player with state {['red', 'blue'][self.state - 1]} #2")
                     available_move_flag = False
             else:
                 self.field[dest].object = self.field[cell].object
@@ -72,7 +72,7 @@ class Players:
                 self.field[dest].change()
                 self.field[cell].change()
         else:
-            print(f'No moves from point {cell} to {dest} as player with state {['red', 'blue'][self.state - 1]} #3')
+            print(f"No moves from point {cell} to {dest} as player with state {['red', 'blue'][self.state - 1]} #3")
 
             # print(self.field[cell].object in moving_objects, cell != dest, self.field[
             #     cell].state == self.state, dest in dfs_moves(self.field, cell), self.field[cell].blocked != 1)
