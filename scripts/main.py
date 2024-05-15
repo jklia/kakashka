@@ -51,23 +51,24 @@ class Players:
         self.money = money
 
     def salary(self):
-        for cell in self.dots:
-            if cell.state == self.state:
-                if cell.obj == 'house':
+        for dot in self.dots:
+            if dot.state == self.state:
+                if dot.obj == 'house':
                     self.money += 4
-                if cell.obj != 'tree':
+                if dot.obj != 'tree':
                     self.money += 1
-                if cell.obj == 'peasant':
+                if dot.obj == 'peasant':
                     self.money -= 2
-                if cell.obj == 'knight':
+                if dot.obj == 'knight':
                     self.money -= 6
-                if cell.obj == 'lord':
+                if dot.obj == 'lord':
                     self.money -= 18
 
         if self.money < 0:
-            for cell in self.dots:
-                if cell.obj in moving_objects:
-                    cell.change_object('')
+            for dot in self.dots:
+                if dot.obj in moving_objects:
+                    dot.change_object('')
+                    print(f"State {['red', 'blue'][self.state - 1]} is starving due to lack of money ({self.money})")
 
     def move(self, cell, dest):
         available_move_flag = True
@@ -78,14 +79,13 @@ class Players:
                     if self.dots[dest].obj == 'lord' or (
                             self.dots[dest].obj == 'knight' and self.dots[cell].obj in ['knight', 'lord']) or (
                             self.dots[dest].obj == 'peasant' and self.dots[cell].obj == 'lord'):
-                        print(f"No moves from point {cell} to {dest}"
-                              f" as player with state {['red', 'blue'][self.state - 1]} #1")
+                        print(
+                            f"No moves from cell {cell} to cell {dest} for state {['red', 'blue'][self.state - 1]} #1")
                         available_move_flag = False
                     else:
                         self.dots[dest].change_object(self.dots[cell].obj)
                 else:
-                    print(f"No moves from point {cell} to {dest}"
-                          f" as player with state {['red', 'blue'][self.state - 1]} #2")
+                    print(f"No moves from cell {cell} to cell {dest} for state {['red', 'blue'][self.state - 1]} #2")
                     available_move_flag = False
             else:
                 self.dots[dest].obj = self.dots[cell].obj
@@ -98,11 +98,7 @@ class Players:
                 self.dots[dest].change()
                 self.dots[cell].change()
         else:
-            print(f"No moves from point {cell} to {dest}"
-                  f" as player with state {['red', 'blue'][self.state - 1]} #3")
-
-            # print(self.field[cell].object in moving_objects, cell != dest, self.field[
-            #     cell].state == self.state, dest in dfs_moves(self.field, cell), self.field[cell].blocked != 1)
+            print(f"No moves from cell {cell} to cell {dest} for state {['red', 'blue'][self.state - 1]} #3")
 
     def build(self, obj, cell):
         near = False
@@ -113,13 +109,15 @@ class Players:
                     self.dots[cell].change_object(obj)
                     self.money -= 12
                 else:
-                    print(f'Not enough money ({self.money}) for {obj} or another problem')
+
+                    print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
+                          f"for building {obj} or another problem occurred")
             elif obj == 'tower':
                 if self.money >= 15 and self.dots[cell].state == self.state and self.dots[cell].obj == '':
                     self.dots[cell].change_object(obj)
                     self.money -= 15
-                else:
-                    print(f'Not enough money ({self.money}) for {obj} or another problem')
+                    print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
+                          f"for building {obj} or another problem occurred")
             else:
                 for i in self.dots[cell].friends:
                     if self.dots[i].state == self.state:
@@ -147,7 +145,8 @@ class Players:
                             self.dots[cell].change_object(obj)
                             self.money -= 10
                         else:
-                            print(f'Not enough money ({self.money}) for {obj} or another problem')
+                            print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
+                                  f"for building {obj} or another problem occurred")
                     elif obj == 'knight':
                         if (self.money >= 20 and self.dots[cell].state != self.state and self.dots[
                             cell].defense <= 0) or \
@@ -163,7 +162,8 @@ class Players:
                             self.dots[cell].change_object(obj)
                             self.money -= 20
                         else:
-                            print(f'Not enough money ({self.money}) for {obj} or another problem')
+                            print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
+                                  f"for building {obj} or another problem occurred")
                     elif obj == 'lord':
                         if (self.money >= 30 and self.dots[cell].state != self.state and self.dots[
                             cell].defense <= 0) or (
@@ -179,9 +179,10 @@ class Players:
                             self.dots[cell].change_object(obj)
                             self.money -= 30
                         else:
-                            print(f'Not enough money ({self.money}) for {obj} or another problem')
+                            print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
+                                  f"for building {obj} or another problem occurred")
         else:
-            print('Here is no land to build')
+            print(f'No land to build on cell {cell}')
 
 
 class GameProcess:
@@ -192,14 +193,13 @@ class GameProcess:
         self.dots = dots
 
     def bot(self, player):
-        # count = 0
+        # count = False  # Нужен ли этот count, а если нужен, то зачем?
         for cell in self.dots:
             if cell.state == player.state:
                 if cell.obj == '':
-                    choice_object = choice(
-                        ['peasant', 'knight', 'house', 'tower', 'lord'])
+                    choice_object = choice(['peasant', 'knight', 'house', 'tower', 'lord'])
+                    print(f"State {['red', 'blue'][cell.state - 1]} is building {choice_object} on cell {cell.counter}")
                     player.build(choice_object, cell.counter)
-                    print('BUILD', cell.state, cell.counter, choice_object)
                 elif cell.obj in moving_objects:
                     moves_list = list(dfs_moves(self.dots, cell.counter))
                     list_to_move = []
@@ -209,10 +209,11 @@ class GameProcess:
                     if not list_to_move:
                         list_to_move = moves_list
                     choice_move = choice(list_to_move)
-                    # print(cell.id, list_to_move)
+                    print(
+                        f"State {['red', 'blue'][cell.state - 1]} is moving {cell.obj} from "
+                        f"cell {cell.counter} to cell {choice_move}")
                     player.move(cell.counter, choice_move)
-                    print('MOVE', cell.state, cell.counter, choice_move)
-                    # count = 1
+                    # count = True
                     break
             # if count:
             #     break
@@ -621,36 +622,55 @@ def music_pause(e, button):
                 button.set_text('Music OFF')
 
 
-def game_init():
+def button_manager():
     manager = pygame_gui.UIManager((WIN_WIDTH, WIN_HEIGHT))
-
+    if music_flag:
+        mb_text = 'Music OFF'
+    else:
+        mb_text = 'Music ON'
     music_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 141, WIN_HEIGHT - 45), (131, 40)),
-                                                text='Music OFF', manager=manager)
-
+                                                text=mb_text, manager=manager)
+    if digits_flag:
+        dg_text = 'Digits OFF'
+    else:
+        dg_text = 'Digits ON'
     digits_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 282, WIN_HEIGHT - 45), (131, 40)),
-                                                 text='Digits OFF', manager=manager)
-
+                                                 text=dg_text, manager=manager)
+    if pause_flag:
+        p_text = 'Game OFF'
+    else:
+        p_text = 'Game ON'
     game_pause_button = pygame_gui.elements.UIButton(
         relative_rect=pg.Rect((WIN_WIDTH - 423, WIN_HEIGHT - 45), (131, 40)),
-        text='Game OFF', manager=manager)
+        text=p_text, manager=manager)
 
+    if delay == orig_delay:
+        fr_text = 'Speed up'
+    else:
+        fr_text = 'Slow down'
     freezer_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 564, WIN_HEIGHT - 45), (131, 40)),
-                                                  text='Speed up', manager=manager)
+                                                  text=fr_text, manager=manager)
+    return manager, music_button, digits_button, game_pause_button, freezer_button
 
-    if music_flag:
-        pg.mixer.music.load(tracks[randint(0, len(tracks) - 1)])
-        pg.mixer.music.set_volume(music_volume)
-        pg.mixer.music.play(-1)
+
+def game_init():
+    manager, music_button, digits_button, game_pause_button, freezer_button = button_manager()
+
+    pg.mixer.music.load(tracks[randint(0, len(tracks) - 1)])
+    pg.mixer.music.set_volume(music_volume)
+    pg.mixer.music.play(-1)
+    if not music_flag:
+        pg.mixer.music.pause()
 
     # player1 - красный, player2 - синий
     dots = set_defense(dots_init())
-    player1 = Players(dots, 1, 1000)
-    player2 = Players(dots, 2, 1000)
+    player1 = Players(dots, 1, 200)
+    player2 = Players(dots, 2, 200)
     gp = GameProcess([player1, player2], dots)
 
     starting_timer = time()
 
-    dfs_show(dots, 130, 'moves')  # Визуализация работы DFS для нахождения возможных ходов для 130 клетки
+    # dfs_show(dots, 130, 'moves')  # Визуализация работы DFS для нахождения возможных ходов для 130 клетки
 
     game = True
 
