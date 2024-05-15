@@ -1,7 +1,7 @@
 from misc import *
 from config import *
 
-
+#norm ne?
 # pip install -r requirements.txt
 
 
