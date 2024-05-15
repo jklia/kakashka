@@ -19,7 +19,8 @@ theme = config.theme
 dev_flag = config.dev_flag
 digits_flag = config.digits_flag
 music_flag = config.music_flag
-bots_flag = config.bots_flag
+pause_flag = config.pause_flag
+stress_test_flag = config.stress_test_flag
 
 WIN_WIDTH = config.WIN_WIDTH
 WIN_HEIGHT = config.WIN_HEIGHT
@@ -226,7 +227,7 @@ class GameProcess:
         self.dots = set_defense(self.dots)
         self.players[0] = Players(self.dots, 1, self.players[0].money)
         self.players[1] = Players(self.dots, 2, self.players[0].money)
-        if bots_flag:
+        if pause_flag:
             for player in self.players:
                 self.bot(player)
                 self.dots = set_defense(self.dots)
@@ -249,160 +250,6 @@ class GameProcess:
             if (timer // delay_time) != self.sec_counter:
                 self.bots()
                 self.sec_counter = timer // delay_time
-
-
-def dfs_moves(dots, cell, depth=3, visited=None, origin=None, attack=0):
-    friends = set()
-    if attack == 0:
-        if dots[cell].obj == 'peasant':
-            attack = 1
-        elif dots[cell].obj == 'knight':
-            attack = 2
-        elif dots[cell].obj == 'lord':
-            attack = 3
-    if origin is None:
-        origin = dots[cell]
-    if visited is None:
-        visited = set()
-    if depth >= 0:
-        depth -= 1
-        if origin.obj in moving_objects:
-            for friend in dots[cell].friends:
-                if dots[cell].state and (dots[friend].defense < attack or dots[friend].state == origin.state):
-                    for n_friend in dots[friend].friends:
-                        if dots[n_friend].state == origin.state:
-                            friends.add(friend)
-            visited.add(cell)
-        elif origin.obj in static_objects:
-            return visited
-        for next_friend in friends:
-            dfs_moves(dots, next_friend, depth, visited, origin, attack)
-    return visited
-
-
-def dfs_defense(dots, cell, depth=1, visited=None, origin=None):
-    friends = set()
-    if origin is None:
-        origin = dots[cell].state
-    if visited is None:
-        visited = set()
-    if depth >= 0:
-        depth -= 1
-        if cell:
-            for friend in dots[cell].friends:
-                if dots[friend].state == origin:
-                    friends.add(friend)
-            visited.add(cell)
-        for next_friend in friends:
-            dfs_defense(dots, next_friend, depth, visited, origin)
-    return visited
-
-
-def dot_init(i):
-    left = [0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144]
-    right = [11, 23, 35, 47, 59, 71, 83, 95, 107, 119, 131, 143, 155]
-    up = [6, 7, 8, 9, 10, 11]
-    very_up = [0, 1, 2, 3, 4, 5]
-    down = [144, 145, 146, 147, 148, 149]
-    very_down = [150, 151, 152, 152, 154, 155]
-
-    defense = 0
-    blocked = -1
-
-    x_cord = (i % 6) + 1
-    y_cord = 0
-
-    if i % 6 == 0:
-        y_cord += 1
-
-    if field[i][2] in moving_objects:
-        blocked = 0
-
-    if field[i][2] == 'knight' or field[i][2] == 'flag':
-        defense = 1
-    elif field[i][2] == 'lord' or field[i][2] == 'tower':
-        defense = 2
-
-    if (i // MAP_WIDTH) % 1 == 0 and (i // MAP_WIDTH) % 2 == 1:
-
-        friends = [i - 12, i - 5, i + 7, i + 12, i + 6, i - 6]
-
-        for f in range(6):
-            if i in up:
-                friends[0] = False
-            if i in very_up:
-                friends[0] = False
-                friends[1] = False
-                friends[5] = False
-            if i in down:
-                friends[3] = False
-            if i in very_down:
-                friends[2] = False
-                friends[3] = False
-                friends[4] = False
-            if i in right:
-                friends[1] = False
-                friends[2] = False
-            if i in left:
-                friends[4] = False
-                friends[5] = False
-            for j in range(len(friends)):
-                if friends[j] >= 155 or field[friends[j]][0] == 0:
-                    friends[j] = False
-        while False in friends:
-            friends.remove(False)
-        return GameSprite(X + (A * 3 * (i % MAP_WIDTH)) + (A * 1.5), Y + ((A * (3 ** 0.5)) / 2) * (i // MAP_WIDTH),
-                          x_cord, y_cord,
-                          field[i][0], field[i][1], field[i][2], state_colors, friends, i, defense, blocked)
-
-    else:
-
-        friends = [i - 12, i - 6, i + 6, i + 12, i + 5, i - 7]
-
-        for f in range(6):
-            if i in up:
-                friends[0] = False
-            if i in very_up:
-                friends[0] = False
-                friends[1] = False
-                friends[5] = False
-            if i in down:
-                friends[3] = False
-            if i in very_down:
-                friends[2] = False
-                friends[3] = False
-                friends[4] = False
-            if i in right:
-                friends[1] = False
-                friends[2] = False
-            if i in left:
-                friends[4] = False
-                friends[5] = False
-            for j in range(len(friends)):
-                if friends[j] >= 155 or field[friends[j]][0] == 0:
-                    friends[j] = False
-            while False in friends:
-                friends.remove(False)
-            return GameSprite(X + (A * 3 * (i % MAP_WIDTH)), Y + ((A * (3 ** 0.5)) / 2) * (i // MAP_WIDTH), x_cord,
-                              y_cord,
-                              field[i][0],
-                              field[i][1], field[i][2], state_colors, friends, i, defense, blocked)
-
-
-def tree_spreading(dots):
-    j = randint(1, 5)
-    dots_copy = copy.deepcopy(dots)
-    if j != 1:
-        return dots_copy
-    else:
-        for dot in dots:
-            if dot.obj == 'tree':
-                k = randint(1, 5)
-                if k == 1:
-                    cell = choice(dot.friends)
-                    if cell and dots_copy[cell].land != 0:
-                        dots_copy[cell].change_object('tree')
-        return dots_copy
 
 
 class GameSprite:
@@ -533,56 +380,95 @@ class GameSprite:
         return defense
 
 
-def bots_pause(e, button):
-    global bots_flag
-    if e.type == pygame_gui.UI_BUTTON_PRESSED:
-        if e.ui_element == button:
-            if bots_flag:
-                bots_flag = False
-                button.set_text('Bots ON')
-            else:
-                bots_flag = True
-                button.set_text('Bots OFF')
+def dot_init(i):
+    left = [0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144]
+    right = [11, 23, 35, 47, 59, 71, 83, 95, 107, 119, 131, 143, 155]
+    up = [6, 7, 8, 9, 10, 11]
+    very_up = [0, 1, 2, 3, 4, 5]
+    down = [144, 145, 146, 147, 148, 149]
+    very_down = [150, 151, 152, 152, 154, 155]
 
+    defense = 0
+    blocked = -1
 
-def digits_show(e, button):
-    global digits_flag
-    if e.type == pygame_gui.UI_BUTTON_PRESSED:
-        if e.ui_element == button:
-            if digits_flag:
-                digits_flag = False
-                button.set_text('Digits ON')
-            else:
-                digits_flag = True
-                button.set_text('Digits OFF')
+    x_cord = (i % 6) + 1
+    y_cord = 0
 
+    if i % 6 == 0:
+        y_cord += 1
 
-orig_delay = delay
+    if field[i][2] in moving_objects:
+        blocked = 0
 
+    if field[i][2] == 'knight' or field[i][2] == 'flag':
+        defense = 1
+    elif field[i][2] == 'lord' or field[i][2] == 'tower':
+        defense = 2
 
-def freeze(e, button):
-    global delay
-    global orig_delay
-    if e.type == pygame_gui.UI_BUTTON_PRESSED:
-        if e.ui_element == button:
-            if delay == 0:
-                delay = orig_delay
-                button.set_text('Unfreeze')
-            else:
-                delay = 0
-                button.set_text('Freeze')
+    if (i // MAP_WIDTH) % 1 == 0 and (i // MAP_WIDTH) % 2 == 1:
 
+        friends = [i - 12, i - 5, i + 7, i + 12, i + 6, i - 6]
 
-def music_pause(e, button):
-    global music_flag
-    if e.type == pygame_gui.UI_BUTTON_PRESSED:
-        if e.ui_element == button:
-            if pg.mixer.music.get_busy():
-                pg.mixer.music.pause()
-                button.set_text('Music ON')
-            else:
-                pg.mixer.music.unpause()
-                button.set_text('Music OFF')
+        for f in range(6):
+            if i in up:
+                friends[0] = False
+            if i in very_up:
+                friends[0] = False
+                friends[1] = False
+                friends[5] = False
+            if i in down:
+                friends[3] = False
+            if i in very_down:
+                friends[2] = False
+                friends[3] = False
+                friends[4] = False
+            if i in right:
+                friends[1] = False
+                friends[2] = False
+            if i in left:
+                friends[4] = False
+                friends[5] = False
+            for j in range(len(friends)):
+                if friends[j] >= 155 or field[friends[j]][0] == 0:
+                    friends[j] = False
+        while False in friends:
+            friends.remove(False)
+        return GameSprite(X + (A * 3 * (i % MAP_WIDTH)) + (A * 1.5), Y + ((A * (3 ** 0.5)) / 2) * (i // MAP_WIDTH),
+                          x_cord, y_cord,
+                          field[i][0], field[i][1], field[i][2], state_colors, friends, i, defense, blocked)
+
+    else:
+
+        friends = [i - 12, i - 6, i + 6, i + 12, i + 5, i - 7]
+
+        for f in range(6):
+            if i in up:
+                friends[0] = False
+            if i in very_up:
+                friends[0] = False
+                friends[1] = False
+                friends[5] = False
+            if i in down:
+                friends[3] = False
+            if i in very_down:
+                friends[2] = False
+                friends[3] = False
+                friends[4] = False
+            if i in right:
+                friends[1] = False
+                friends[2] = False
+            if i in left:
+                friends[4] = False
+                friends[5] = False
+            for j in range(len(friends)):
+                if friends[j] >= 155 or field[friends[j]][0] == 0:
+                    friends[j] = False
+            while False in friends:
+                friends.remove(False)
+            return GameSprite(X + (A * 3 * (i % MAP_WIDTH)), Y + ((A * (3 ** 0.5)) / 2) * (i // MAP_WIDTH), x_cord,
+                              y_cord,
+                              field[i][0],
+                              field[i][1], field[i][2], state_colors, friends, i, defense, blocked)
 
 
 def dots_init():
@@ -608,7 +494,70 @@ def set_defense(dots):
     return dots_copy
 
 
-# Как работает DFS
+def dfs_moves(dots, cell, depth=3, visited=None, origin=None, attack=0):
+    friends = set()
+    if attack == 0:
+        if dots[cell].obj == 'peasant':
+            attack = 1
+        elif dots[cell].obj == 'knight':
+            attack = 2
+        elif dots[cell].obj == 'lord':
+            attack = 3
+    if origin is None:
+        origin = dots[cell]
+    if visited is None:
+        visited = set()
+    if depth >= 0:
+        depth -= 1
+        if origin.obj in moving_objects:
+            for friend in dots[cell].friends:
+                if dots[cell].state and (dots[friend].defense < attack or dots[friend].state == origin.state):
+                    for n_friend in dots[friend].friends:
+                        if dots[n_friend].state == origin.state:
+                            friends.add(friend)
+            visited.add(cell)
+        elif origin.obj in static_objects:
+            return visited
+        for next_friend in friends:
+            dfs_moves(dots, next_friend, depth, visited, origin, attack)
+    return visited
+
+
+def dfs_defense(dots, cell, depth=1, visited=None, origin=None):
+    friends = set()
+    if origin is None:
+        origin = dots[cell].state
+    if visited is None:
+        visited = set()
+    if depth >= 0:
+        depth -= 1
+        if cell:
+            for friend in dots[cell].friends:
+                if dots[friend].state == origin:
+                    friends.add(friend)
+            visited.add(cell)
+        for next_friend in friends:
+            dfs_defense(dots, next_friend, depth, visited, origin)
+    return visited
+
+
+def tree_spreading(dots):
+    j = randint(1, 5)
+    dots_copy = copy.deepcopy(dots)
+    if j != 1:
+        return dots_copy
+    else:
+        for dot in dots:
+            if dot.obj == 'tree':
+                k = randint(1, 5)
+                if k == 1:
+                    cell = choice(dot.friends)
+                    if cell and dots_copy[cell].land != 0:
+                        dots_copy[cell].change_object('tree')
+        return dots_copy
+
+
+# Демонстрация работы DFS
 def dfs_show(dots, start, mode, dfs_list=None):
     if mode == 'defense':
         dfs_list = dfs_defense(dots, start)
@@ -621,30 +570,88 @@ def dfs_show(dots, start, mode, dfs_list=None):
             dots[i].reset()
 
 
+def game_pause(e, button):
+    global pause_flag
+    if e.type == pygame_gui.UI_BUTTON_PRESSED:
+        if e.ui_element == button:
+            if pause_flag:
+                pause_flag = False
+                button.set_text('Game ON')
+            else:
+                pause_flag = True
+                button.set_text('Game OFF')
+
+
+def digits_show(e, button):
+    global digits_flag
+    if e.type == pygame_gui.UI_BUTTON_PRESSED:
+        if e.ui_element == button:
+            if digits_flag:
+                digits_flag = False
+                button.set_text('Digits ON')
+            else:
+                digits_flag = True
+                button.set_text('Digits OFF')
+
+
+orig_delay = delay
+
+
+def freeze(e, button):
+    global delay
+    if e.type == pygame_gui.UI_BUTTON_PRESSED:
+        if e.ui_element == button:
+            if delay == 0:
+                delay = orig_delay
+                button.set_text('Speed up')
+            else:
+                delay = 0
+                button.set_text('Slow down')
+
+
+def music_pause(e, button):
+    global music_flag
+    if e.type == pygame_gui.UI_BUTTON_PRESSED:
+        if e.ui_element == button:
+            if pg.mixer.music.get_busy():
+                pg.mixer.music.pause()
+                button.set_text('Music ON')
+            else:
+                pg.mixer.music.unpause()
+                button.set_text('Music OFF')
+
+
 def game_init():
     manager = pygame_gui.UIManager((WIN_WIDTH, WIN_HEIGHT))
 
     music_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 141, WIN_HEIGHT - 45), (131, 40)),
                                                 text='Music OFF', manager=manager)
-    bots_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 282, WIN_HEIGHT - 45), (131, 40)),
-                                               text='Bots OFF', manager=manager)
-    digits_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 423, WIN_HEIGHT - 45), (131, 40)),
+
+    digits_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 282, WIN_HEIGHT - 45), (131, 40)),
                                                  text='Digits OFF', manager=manager)
+
+    game_pause_button = pygame_gui.elements.UIButton(
+        relative_rect=pg.Rect((WIN_WIDTH - 423, WIN_HEIGHT - 45), (131, 40)),
+        text='Game OFF', manager=manager)
+
     freezer_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 564, WIN_HEIGHT - 45), (131, 40)),
-                                                  text='Unfreeze', manager=manager)
+                                                  text='Speed up', manager=manager)
 
     if music_flag:
         pg.mixer.music.load(tracks[randint(0, len(tracks) - 1)])
         pg.mixer.music.set_volume(music_volume)
         pg.mixer.music.play(-1)
 
-    # player1 - красные, player2 - синие
+    # player1 - красный, player2 - синий
     dots = set_defense(dots_init())
     player1 = Players(dots, 1, 1000)
     player2 = Players(dots, 2, 1000)
     gp = GameProcess([player1, player2], dots)
 
     starting_timer = time()
+
+    dfs_show(dots, 130, 'moves')  # Визуализация работы DFS для нахождения возможных ходов для 130 клетки
+
     game = True
 
     while game:
@@ -654,7 +661,7 @@ def game_init():
                 game = False
 
             music_pause(e, music_button)
-            bots_pause(e, bots_button)
+            game_pause(e, game_pause_button)
             digits_show(e, digits_button)
             freeze(e, freezer_button)
 
@@ -665,15 +672,15 @@ def game_init():
         manager.draw_ui(window)
 
         # Стресс-тест игры:
-        #
-        # listw = []
-        # for i in range(1, 1000):
-        #     for j in range(i):
-        #         listw.append(j ** 10)
+        if stress_test_flag:
+            listw = []
+            for i in range(1, 1000):
+                for j in range(i):
+                    listw.append(j ** 10)
 
         ending_timer = time()
         timer = ending_timer - starting_timer
-        gp.main(timer, delay)  # 0 без ограничений, > 0 — задержка хода
+        gp.main(timer, delay)  # delay = 0 без ограничений, delay > 0 — задержка между ходами в секундах
 
         pg.display.update()
         clock.tick(FPS)
