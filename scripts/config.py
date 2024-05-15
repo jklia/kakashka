@@ -1,12 +1,4 @@
 from fields import Fields
-import os
-import copy
-from random import sample, choice, randint
-from time import time
-
-import pygame as pg
-import pygame_gui
-from pygame import gfxdraw
 
 FPS = 0
 delay = 2 # задержка между ходами в секундах

@@ -1,9 +1,34 @@
-from misc import *
-from config import *
+import copy
+from random import choice, randint
+from time import time
+# import pygame as pg
+import pygame_gui
+from pygame import gfxdraw
 
+from misc import *
+# from config import *
+import config
 
 # pip install -r requirements.txt
 
+FPS = config.FPS
+delay = config.delay
+
+field = config.field
+music_volume = config.music_volume
+theme = config.theme
+
+dev_flag = config.dev_flag
+digits_flag = config.digits_flag
+music_flag = config.music_flag
+bots_flag = config.bots_flag
+
+WIN_WIDTH = config.WIN_WIDTH
+WIN_HEIGHT = config.WIN_HEIGHT
+X = config.X
+Y = config.Y
+A = config.A
+MAP_WIDTH = config.MAP_WIDTH
 
 pg.init()
 pg.display.set_icon(icon)
@@ -21,138 +46,141 @@ defense_objects = ['flag', 'tower', 'peasant', 'knight', 'lord']
 
 class Players:
 
-    def __init__(self, field, state, money=10):
-        self.field = field
+    def __init__(self, dots, state, money=10):
+        self.dots = dots
         self.state = state
         self.money = money
 
     def salary(self):
-        for cell in self.field:
+        for cell in self.dots:
             if cell.state == self.state:
-                if cell.object == 'house':
+                if cell.obj == 'house':
                     self.money += 4
-                if cell.object != 'tree':
+                if cell.obj != 'tree':
                     self.money += 1
-                if cell.object == 'peasant':
+                if cell.obj == 'peasant':
                     self.money -= 2
-                if cell.object == 'knight':
+                if cell.obj == 'knight':
                     self.money -= 6
-                if cell.object == 'lord':
+                if cell.obj == 'lord':
                     self.money -= 18
 
         if self.money < 0:
-            for cell in self.field:
-                if cell.object in moving_objects:
+            for cell in self.dots:
+                if cell.obj in moving_objects:
                     cell.change_object('')
 
     def move(self, cell, dest):
         available_move_flag = True
-        if (self.field[cell].object in moving_objects) and cell != dest and self.field[cell].state == self.state and \
-                dest in dfs_moves(self.field, cell) and self.field[cell].blocked == 0:
-            if self.field[dest].state == self.field[cell].state:
-                if self.field[dest].object not in ['house', 'flag', 'tower']:
-                    if self.field[dest].object == 'lord' or (
-                            self.field[dest].object == 'knight' and self.field[cell].object in ['knight', 'lord']) or (
-                            self.field[dest].object == 'peasant' and self.field[cell].object == 'lord'):
-                        print(f"No moves from point {cell} to {dest} as player with state {['red', 'blue'][self.state - 1]} #1")
+        if (self.dots[cell].obj in moving_objects) and cell != dest and self.dots[cell].state == self.state and \
+                dest in dfs_moves(self.dots, cell) and self.dots[cell].blocked == 0:
+            if self.dots[dest].state == self.dots[cell].state:
+                if self.dots[dest].obj not in ['house', 'flag', 'tower']:
+                    if self.dots[dest].obj == 'lord' or (
+                            self.dots[dest].obj == 'knight' and self.dots[cell].obj in ['knight', 'lord']) or (
+                            self.dots[dest].obj == 'peasant' and self.dots[cell].obj == 'lord'):
+                        print(f"No moves from point {cell} to {dest}"
+                              f" as player with state {['red', 'blue'][self.state - 1]} #1")
                         available_move_flag = False
                     else:
-                        self.field[dest].change_object(self.field[cell].object)
+                        self.dots[dest].change_object(self.dots[cell].obj)
                 else:
-                    print(f"No moves from point {cell} to {dest} as player with state {['red', 'blue'][self.state - 1]} #2")
+                    print(f"No moves from point {cell} to {dest}"
+                          f" as player with state {['red', 'blue'][self.state - 1]} #2")
                     available_move_flag = False
             else:
-                self.field[dest].object = self.field[cell].object
-                self.field[dest].state = self.field[cell].state
+                self.dots[dest].obj = self.dots[cell].obj
+                self.dots[dest].state = self.dots[cell].state
 
             if available_move_flag:
-                self.field[cell].object = ''
-                self.field[cell].change_object('block0')
-                self.field[dest].change_object('block1')
-                self.field[dest].change()
-                self.field[cell].change()
+                self.dots[cell].obj = ''
+                self.dots[cell].change_object('block0')
+                self.dots[dest].change_object('block1')
+                self.dots[dest].change()
+                self.dots[cell].change()
         else:
-            print(f"No moves from point {cell} to {dest} as player with state {['red', 'blue'][self.state - 1]} #3")
+            print(f"No moves from point {cell} to {dest}"
+                  f" as player with state {['red', 'blue'][self.state - 1]} #3")
 
             # print(self.field[cell].object in moving_objects, cell != dest, self.field[
             #     cell].state == self.state, dest in dfs_moves(self.field, cell), self.field[cell].blocked != 1)
 
-    def build(self, object, cell):
+    def build(self, obj, cell):
         near = False
         block = 0
-        if self.field[cell].land and self.field[cell].object not in ['house', 'flag', 'tower']:
-            if object == 'house':
-                if self.money >= 12 and self.field[cell].state == self.state and self.field[cell].object == '':
-                    self.field[cell].change_object(object)
+        if self.dots[cell].land and self.dots[cell].obj not in ['house', 'flag', 'tower']:
+            if obj == 'house':
+                if self.money >= 12 and self.dots[cell].state == self.state and self.dots[cell].obj == '':
+                    self.dots[cell].change_object(obj)
                     self.money -= 12
                 else:
-                    print(f'Not enough money ({self.money}) for {object} or another problem')
-            elif object == 'tower':
-                if self.money >= 15 and self.field[cell].state == self.state and self.field[cell].object == '':
-                    self.field[cell].change_object(object)
+                    print(f'Not enough money ({self.money}) for {obj} or another problem')
+            elif obj == 'tower':
+                if self.money >= 15 and self.dots[cell].state == self.state and self.dots[cell].obj == '':
+                    self.dots[cell].change_object(obj)
                     self.money -= 15
                 else:
-                    print(f'Not enough money ({self.money}) for {object} or another problem')
+                    print(f'Not enough money ({self.money}) for {obj} or another problem')
             else:
-                for i in self.field[cell].friends:
-                    if self.field[i].state == self.state:
+                for i in self.dots[cell].friends:
+                    if self.dots[i].state == self.state:
                         near = True
                         break
                 if near:
-                    if self.field[cell].blocked == 1 or self.field[cell].state != self.state or \
-                            self.field[cell].object == 'tree':
+                    if self.dots[cell].blocked == 1 or self.dots[cell].state != self.state or \
+                            self.dots[cell].obj == 'tree':
                         block = 1
-                    elif self.field[cell].blocked == 0 or (
-                            self.field[cell].state == self.state and self.field[cell].object == ''):
+                    elif self.dots[cell].blocked == 0 or (
+                            self.dots[cell].state == self.state and self.dots[cell].obj == ''):
                         block = 0
-                    if object == 'peasant':
-                        if (self.money >= 10 and self.field[cell].state != self.state and self.field[
+                    if obj == 'peasant':
+                        if (self.money >= 10 and self.dots[cell].state != self.state and self.dots[
                             cell].defense <= 0) or (
-                                self.money >= 10 and self.field[cell].state == self.state):
-                            if self.field[cell].state != self.state:
-                                self.field[cell].object = ''
-                                self.field[cell].state = self.state
-                                self.field[cell].change()
+                                self.money >= 10 and self.dots[cell].state == self.state):
+                            if self.dots[cell].state != self.state:
+                                self.dots[cell].obj = ''
+                                self.dots[cell].state = self.state
+                                self.dots[cell].change()
                             if block == 1:
-                                self.field[cell].change_object('block1')
+                                self.dots[cell].change_object('block1')
                             else:
-                                self.field[cell].change_object('block0')
-                            self.field[cell].change_object(object)
+                                self.dots[cell].change_object('block0')
+                            self.dots[cell].change_object(obj)
                             self.money -= 10
                         else:
-                            print(f'Not enough money ({self.money}) for {object} or another problem')
-                    elif object == 'knight':
-                        if (self.money >= 20 and self.field[cell].state != self.state and self.field[
+                            print(f'Not enough money ({self.money}) for {obj} or another problem')
+                    elif obj == 'knight':
+                        if (self.money >= 20 and self.dots[cell].state != self.state and self.dots[
                             cell].defense <= 0) or \
-                                (self.money >= 20 and self.field[cell].state == self.state):
-                            if self.field[cell].state != self.state:
-                                self.field[cell].object = ''
-                                self.field[cell].state = self.state
-                                self.field[cell].change()
+                                (self.money >= 20 and self.dots[cell].state == self.state):
+                            if self.dots[cell].state != self.state:
+                                self.dots[cell].obj = ''
+                                self.dots[cell].state = self.state
+                                self.dots[cell].change()
                             if block == 1:
-                                self.field[cell].change_object('block1')
+                                self.dots[cell].change_object('block1')
                             else:
-                                self.field[cell].change_object('block0')
-                            self.field[cell].change_object(object)
+                                self.dots[cell].change_object('block0')
+                            self.dots[cell].change_object(obj)
                             self.money -= 20
                         else:
-                            print(f'Not enough money ({self.money}) for {object} or another problem')
-                    elif object == 'lord':
-                        if (self.money >= 30 and self.field[cell].state != self.state and self.field[
+                            print(f'Not enough money ({self.money}) for {obj} or another problem')
+                    elif obj == 'lord':
+                        if (self.money >= 30 and self.dots[cell].state != self.state and self.dots[
                             cell].defense <= 0) or (
-                                self.money >= 30 and self.field[cell].state == self.state):
-                            if self.field[cell].state != self.state:
-                                self.field[cell].object = ''
-                                self.field[cell].state = self.state
-                                self.field[cell].change()
+                                self.money >= 30 and self.dots[cell].state == self.state):
+                            if self.dots[cell].state != self.state:
+                                self.dots[cell].obj = ''
+                                self.dots[cell].state = self.state
+                                self.dots[cell].change()
                             if block == 1:
-                                self.field[cell].change_object('block1')
+                                self.dots[cell].change_object('block1')
                             else:
-                                self.field[cell].change_object('block0')
-                            self.field[cell].change_object(object)
+                                self.dots[cell].change_object('block0')
+                            self.dots[cell].change_object(obj)
                             self.money -= 30
                         else:
-                            print(f'Not enough money ({self.money}) for {object} or another problem')
+                            print(f'Not enough money ({self.money}) for {obj} or another problem')
         else:
             print('Here is no land to build')
 
@@ -160,84 +188,79 @@ class Players:
 class GameProcess:
     sec_counter = 0
 
-    def __init__(self, players, field):
+    def __init__(self, players, dots):
         self.players = players
-        self.field = field
+        self.dots = dots
 
     def bot(self, player):
-        count = 0
-        for cell in self.field:
-            # print(cell.id, cell.state)
+        # count = 0
+        for cell in self.dots:
             if cell.state == player.state:
-                if cell.object == '':
-                    # choice_object = choice(
-                    #     ['peasant', 'peasant', 'peasant', 'peasant', 'peasant', 'knight', 'knight', 'knight',
-                    #      'house', 'house', 'house', 'house', 'house', 'house', 'tower', 'tower', 'tower', 'lord', 'lord', 'lord', 'lord', 'lord',
-                    #      'lord'])
+                if cell.obj == '':
                     choice_object = choice(
                         ['peasant', 'knight', 'house', 'tower', 'lord'])
-                    player.build(choice_object, cell.id)
-                    print('BUILD', cell.state, cell.id, choice_object)
-                elif cell.object in moving_objects:
-                    moves_list = list(dfs_moves(self.field, cell.id))
+                    player.build(choice_object, cell.counter)
+                    print('BUILD', cell.state, cell.counter, choice_object)
+                elif cell.obj in moving_objects:
+                    moves_list = list(dfs_moves(self.dots, cell.counter))
                     list_to_move = []
                     for move in moves_list:
-                        if self.field[move].state != cell.state:
+                        if self.dots[move].state != cell.state:
                             list_to_move.append(move)
                     if not list_to_move:
                         list_to_move = moves_list
                     choice_move = choice(list_to_move)
                     # print(cell.id, list_to_move)
-                    player.move(cell.id, choice_move)
-                    print('MOVE', cell.state, cell.id, choice_move)
-                    count = 1
+                    player.move(cell.counter, choice_move)
+                    print('MOVE', cell.state, cell.counter, choice_move)
+                    # count = 1
                     break
-            if count:
-                break
+            # if count:
+            #     break
         # print(player.money)
 
     def game(self):
-        for cell in self.field:
+        for cell in self.dots:
             cell.reset()
         pg.display.update()
 
     def bots(self):
-        self.field = set_defense(self.field)
-        self.players[0] = Players(self.field, 1, self.players[0].money)
-        self.players[1] = Players(self.field, 2, self.players[0].money)
+        self.dots = set_defense(self.dots)
+        self.players[0] = Players(self.dots, 1, self.players[0].money)
+        self.players[1] = Players(self.dots, 2, self.players[0].money)
         if bots_flag:
             for player in self.players:
                 self.bot(player)
-                self.field = set_defense(self.field)
-                for i in player.field:
+                self.dots = set_defense(self.dots)
+                for i in player.dots:
                     i.change_object('block0')
                 for i in range(len(self.players)):
-                    self.players[i] = Players(self.field, i + 1, self.players[i].money)
+                    self.players[i] = Players(self.dots, i + 1, self.players[i].money)
                     self.players[i].salary()
-                for cell in self.field:
+                for cell in self.dots:
                     cell.reset()
-            self.field = tree_spreading(self.field)
-            for cell in self.field:
+            self.dots = tree_spreading(self.dots)
+            for cell in self.dots:
                 cell.reset()
 
-    def main(self, time, delay):
+    def main(self, timer, delay_time):
         self.game()
-        if delay == 0:
+        if delay_time == 0:
             self.bots()
         else:
-            if (time // delay) != self.sec_counter:
+            if (timer // delay_time) != self.sec_counter:
                 self.bots()
-                self.sec_counter = time // delay
+                self.sec_counter = timer // delay_time
 
 
 def dfs_moves(dots, cell, depth=3, visited=None, origin=None, attack=0):
     friends = set()
     if attack == 0:
-        if dots[cell].object == 'peasant':
+        if dots[cell].obj == 'peasant':
             attack = 1
-        elif dots[cell].object == 'knight':
+        elif dots[cell].obj == 'knight':
             attack = 2
-        elif dots[cell].object == 'lord':
+        elif dots[cell].obj == 'lord':
             attack = 3
     if origin is None:
         origin = dots[cell]
@@ -245,17 +268,17 @@ def dfs_moves(dots, cell, depth=3, visited=None, origin=None, attack=0):
         visited = set()
     if depth >= 0:
         depth -= 1
-        if origin.object in moving_objects:
+        if origin.obj in moving_objects:
             for friend in dots[cell].friends:
                 if dots[cell].state and (dots[friend].defense < attack or dots[friend].state == origin.state):
                     for n_friend in dots[friend].friends:
                         if dots[n_friend].state == origin.state:
                             friends.add(friend)
             visited.add(cell)
-        elif origin.object in static_objects:
+        elif origin.obj in static_objects:
             return visited
-        for next in friends:
-            dfs_moves(dots, next, depth, visited, origin, attack)
+        for next_friend in friends:
+            dfs_moves(dots, next_friend, depth, visited, origin, attack)
     return visited
 
 
@@ -272,8 +295,8 @@ def dfs_defense(dots, cell, depth=1, visited=None, origin=None):
                 if dots[friend].state == origin:
                     friends.add(friend)
             visited.add(cell)
-        for next in friends:
-            dfs_defense(dots, next, depth, visited, origin)
+        for next_friend in friends:
+            dfs_defense(dots, next_friend, depth, visited, origin)
     return visited
 
 
@@ -375,7 +398,7 @@ def tree_spreading(dots):
         return dots_copy
     else:
         for dot in dots:
-            if dot.object == 'tree':
+            if dot.obj == 'tree':
                 k = randint(1, 5)
                 if k == 1:
                     cell = choice(dot.friends)
@@ -386,7 +409,7 @@ def tree_spreading(dots):
 
 class GameSprite:
 
-    def __init__(self, x, y, x_cord, y_cord, land, state, object, colors, friends, id, defense, blocked):
+    def __init__(self, x, y, x_cord, y_cord, land, state, obj, colors, friends, counter, defense, blocked):
         self.defense = defense
         self.blocked = blocked
         self.colors = colors
@@ -398,8 +421,8 @@ class GameSprite:
         self.x_cord = x_cord
         self.y_cord = y_cord
         self.a = A
-        self.object = object
-        self.id = id
+        self.obj = obj
+        self.counter = counter
         self.point1 = (x + A, y)
         self.point4 = (x - A, y)
         self.point2 = (x + (A / 2), y + ((A * (3 ** 0.5)) / 2))
@@ -426,35 +449,35 @@ class GameSprite:
             pg.draw.lines(window, background_color, True,
                           (self.point1, self.point2, self.point3, self.point4, self.point5, self.point6), width=1)
 
-        if self.object == 'flag':
+        if self.obj == 'flag':
             if self.state == 1:
                 window.blit(flag_shadow_image, (self.x - 9, self.y - 12))
                 window.blit(flag_red_image, (self.x - 10, self.y - 30))
             elif self.state == 2:
                 window.blit(flag_shadow_image, (self.x - 9, self.y - 12))
                 window.blit(flag_blue_image, (self.x - 10, self.y - 30))
-        elif self.object == 'house':
+        elif self.obj == 'house':
             window.blit(house_shadow_image, (self.x - 30, self.y - 20))
             window.blit(house_image, (self.x - 15, self.y - 22))
-        elif self.object == 'tower':
+        elif self.obj == 'tower':
             window.blit(tower_shadow_image, (self.x - 29, self.y - 20))
             window.blit(tower_image, (self.x - 21, self.y - 34))
-        elif self.object == 'peasant':
+        elif self.obj == 'peasant':
             window.blit(person_shadow_image, (self.x - 19, self.y - 16))
             window.blit(peasant_image, (self.x - 18, self.y - 27))
-        elif self.object == 'knight':
+        elif self.obj == 'knight':
             window.blit(person_shadow_image, (self.x - 19, self.y - 16))
             window.blit(knight_image, (self.x - 18, self.y - 27))
-        elif self.object == 'lord':
+        elif self.obj == 'lord':
             window.blit(person_shadow_image, (self.x - 19, self.y - 16))
             window.blit(lord_image, (self.x - 18, self.y - 27))
-        elif self.object == 'tree':
+        elif self.obj == 'tree':
             window.blit(tree_shadow_image, (self.x - 26, self.y - 22))
             window.blit(tree_image, (self.x - 19, self.y - 30))
         if digits_flag:
-            text = f1.render(str(self.id), True, (196, 196, 30))
+            text = f1.render(str(self.counter), True, (196, 196, 30))
             text.set_alpha(210)
-            text_shadow = f1.render(str(self.id), True, (0, 0, 0))
+            text_shadow = f1.render(str(self.counter), True, (0, 0, 0))
             text_shadow.set_alpha(190)
             place = text.get_rect(center=(self.x, self.y))
             place_shadow1 = text_shadow.get_rect(center=(self.x + 1, self.y + 2))
@@ -468,7 +491,7 @@ class GameSprite:
 
     def change(self):
         if self.land == 0:
-            self.object = ''
+            self.obj = ''
             self.state = 0
             self.color = background_color
         else:
@@ -477,37 +500,37 @@ class GameSprite:
             elif self.state != 0:
                 self.color = self.colors[self.state - 1]
 
-    def change_object(self, object):
-        if object == 'block0':
+    def change_object(self, obj):
+        if obj == 'block0':
             self.blocked = 0
-        elif object == 'block1':
+        elif obj == 'block1':
             self.blocked = 0
-        elif object not in moving_objects:
-            if self.object == '':
-                self.object = object
-                if object == 'tower':
+        elif obj not in moving_objects:
+            if self.obj == '':
+                self.obj = obj
+                if obj == 'tower':
                     self.defense = 2
-            if object == '':
-                self.object = object
+            if obj == '':
+                self.obj = obj
         else:
-            if self.object == '' or self.object == 'tree':
-                self.object = object
-                if object == 'knight':
+            if self.obj == '' or self.obj == 'tree':
+                self.obj = obj
+                if obj == 'knight':
                     self.defense = 1
-                if object == 'lord':
+                if obj == 'lord':
                     self.defense = 2
-            elif self.object == 'peasant' and object == 'peasant':
-                self.object = 'knight'
+            elif self.obj == 'peasant' and obj == 'peasant':
+                self.obj = 'knight'
                 self.defense = 1
-            elif (self.object == 'peasant' and object == 'knight') or (self.object == 'knight' and object == 'peasant'):
-                self.object = 'lord'
+            elif (self.obj == 'peasant' and obj == 'knight') or (self.obj == 'knight' and obj == 'peasant'):
+                self.obj = 'lord'
                 self.defense = 2
 
     def get_defense(self):
         defense = 0
-        if self.object in ['flag', 'knight']:
+        if self.obj in ['flag', 'knight']:
             defense = 1
-        elif self.object in ['lord', 'tower']:
+        elif self.obj in ['lord', 'tower']:
             defense = 2
         return defense
 
@@ -575,11 +598,11 @@ def dots_init():
 def set_defense(dots):
     dots_copy = copy.deepcopy(dots)
     for dot in dots_copy:
-        if dot.object not in defense_objects:
+        if dot.obj not in defense_objects:
             dot.defense = 0
     for dot in dots:
-        if dot.object in defense_objects:
-            dfs_list = dfs_defense(dots, dot.id)
+        if dot.obj in defense_objects:
+            dfs_list = dfs_defense(dots, dot.counter)
             defense = dot.get_defense()
             for i in dfs_list:
                 if dots_copy[i].defense < defense:
@@ -651,8 +674,8 @@ def game_init():
         #         listw.append(j ** 10)
 
         ending_timer = time()
-        timing = ending_timer - starting_timer
-        gp.main(timing, delay)  # 0 без ограничений, > 0 — задержка хода
+        timer = ending_timer - starting_timer
+        gp.main(timer, delay)  # 0 без ограничений, > 0 — задержка хода
 
         pg.display.update()
         clock.tick(FPS)
