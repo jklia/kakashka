@@ -1,12 +1,10 @@
 import copy
 from random import choice, randint
 from time import time
-# import pygame as pg
 import pygame_gui
 from pygame import gfxdraw
 
 from misc import *
-# from config import *
 import config
 
 # pip install -r requirements.txt
