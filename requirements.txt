@@ -6,6 +6,6 @@ pluggy==1.5.0
 pygame==2.5.2
 pygame-ce==2.4.1
 pygame_gui==0.6.10
-# pygame-gui==0.6.10
+pygame-gui==0.6.10
 pytest==8.2.0
 python-i18n==0.3.9
