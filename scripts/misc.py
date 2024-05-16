@@ -53,5 +53,5 @@ pg.font.init()
 f1 = pg.font.SysFont('arialblack', 18)
 
 tracks = []
-for track in os.listdir('../content//music'):
+for track in os.listdir('../content/music'):
     tracks.append(f'../content/music/{track}')
