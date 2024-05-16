@@ -4,8 +4,8 @@ from time import time
 import pygame_gui
 from pygame import gfxdraw
 
-from scripts.misc import *
-import scripts.config as config
+from misc import *
+import config
 
 # pip install -r requirements.txt
 

@@ -1,6 +1,6 @@
 import os
 import pygame as pg
-from scripts.config import theme
+from config import theme
 
 
 pg.init()
