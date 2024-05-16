@@ -2,6 +2,7 @@ import copy
 from random import choice, randint
 from time import time
 import pygame_gui
+import pytest
 from pygame import gfxdraw
 
 from misc import *
@@ -653,6 +654,7 @@ def button_manager():
     return manager, music_button, digits_button, game_pause_button, freezer_button
 
 
+@pytest.fixture
 def game_init():
     manager, music_button, digits_button, game_pause_button, freezer_button = button_manager()
 
@@ -670,7 +672,7 @@ def game_init():
 
     starting_timer = time()
 
-    # dfs_show(dots, 130, 'moves')  # Визуализация работы DFS для нахождения возможных ходов для 130 клетки
+    dfs_show(dots, 136, 'defense')  # Визуализация работы DFS для нахождения возможных ходов для 130 клетки
 
     game = True
 
