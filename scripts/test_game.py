@@ -1,5 +1,5 @@
 import pytest
-from scripts.main import Players, GameProcess, dot_init, dots_init
+from main import Players, GameProcess, dot_init, dots_init
 
 
 def test_player_initial_money():
