@@ -1,8 +1,10 @@
 import os
 import pygame as pg
-from config import theme
+from scripts.config import theme
+
 
 pg.init()
+
 
 if theme == 'Dark':
     flag_red_image = pg.transform.scale(pg.image.load('../content/sprites_dark/flag_red.png'), (36, 36))

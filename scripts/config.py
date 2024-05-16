@@ -1,4 +1,4 @@
-from fields import Fields
+from scripts.fields import Fields
 
 FPS = 0
 delay = 2  # Задержка между ходами в секундах
