@@ -24,6 +24,8 @@ def test_game_process_initialization():
 
 def test_move_peasant():
     dots = dots_init()
+    count1 = 0
+    count2 = 0
     for dot in dots:
         if dot.obj == '' and dot.land != 0:
             count1 = dot.counter
@@ -44,6 +46,7 @@ def test_move_peasant():
 
 def test_build_house():
     dots = dots_init()
+    count = 0
     for dot in dots:
         if dot.obj == '' and dot.state == 0 and dot.land != 0:
             count = dot.counter
