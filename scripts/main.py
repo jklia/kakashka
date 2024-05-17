@@ -45,11 +45,12 @@ defense_objects = ['flag', 'tower', 'peasant', 'knight', 'lord']
 
 class Players:
 
-    def __init__(self, dots, state, money=10):
+    def __init__(self, dots, state, money=10, cells = 0):
         self.dots = dots
         self.state = state
         self.money = money
-
+        self.flags = []
+        self.cells = cells
     def salary(self):
         for dot in self.dots:
             if dot.state == self.state:
@@ -183,7 +184,12 @@ class Players:
                                   f"for building {obj} or another problem occurred")
         else:
             print(f'No land to build on cell {cell}')
-
+    def group_count(self):
+        for cell in self.dots:
+            if cell.state == self.state:
+                self.cells += 1
+                if cell.obj == 'flag':
+                    self.flags += [cell.counter]
 
 class GameProcess:
     sec_counter = 0
@@ -381,6 +387,17 @@ class GameSprite:
         return defense
 
 
+class country:
+    def __init__(self, field, players):
+        self.field == field
+        self.players = players
+
+    def analyse(self):
+        for cell in self.field:
+            if cell.obj == 'flag':
+                pass
+
+
 def dot_init(i):
     left = [0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144]
     right = [11, 23, 35, 47, 59, 71, 83, 95, 107, 119, 131, 143, 155]
@@ -392,18 +409,26 @@ def dot_init(i):
     defense = 0
     blocked = -1
 
+    land = field[i][0]
+    state = field[i][1]
+    obj = field[i][2]
+
     x_cord = (i % 6) + 1
     y_cord = 0
 
     if i % 6 == 0:
         y_cord += 1
 
-    if field[i][2] in moving_objects:
+    if land == 0:
+        state = 0
+        obj = ''
+
+    if obj in moving_objects:
         blocked = 0
 
-    if field[i][2] == 'knight' or field[i][2] == 'flag':
+    if obj == 'knight' or obj == 'flag':
         defense = 1
-    elif field[i][2] == 'lord' or field[i][2] == 'tower':
+    elif obj == 'lord' or obj == 'tower':
         defense = 2
 
     if (i // MAP_WIDTH) % 1 == 0 and (i // MAP_WIDTH) % 2 == 1:
@@ -435,8 +460,7 @@ def dot_init(i):
         while False in friends:
             friends.remove(False)
         return GameSprite(X + (A * 3 * (i % MAP_WIDTH)) + (A * 1.5), Y + ((A * (3 ** 0.5)) / 2) * (i // MAP_WIDTH),
-                          x_cord, y_cord,
-                          field[i][0], field[i][1], field[i][2], state_colors, friends, i, defense, blocked)
+                          x_cord, y_cord, land, state, obj, state_colors, friends, i, defense, blocked)
 
     else:
 
@@ -466,10 +490,8 @@ def dot_init(i):
                     friends[j] = False
             while False in friends:
                 friends.remove(False)
-            return GameSprite(X + (A * 3 * (i % MAP_WIDTH)), Y + ((A * (3 ** 0.5)) / 2) * (i // MAP_WIDTH), x_cord,
-                              y_cord,
-                              field[i][0],
-                              field[i][1], field[i][2], state_colors, friends, i, defense, blocked)
+            return GameSprite(X + (A * 3 * (i % MAP_WIDTH)), Y + ((A * (3 ** 0.5)) / 2) * (i // MAP_WIDTH),
+                              x_cord, y_cord, land, state, obj, state_colors, friends, i, defense, blocked)
 
 
 def dots_init():
@@ -512,7 +534,7 @@ def dfs_moves(dots, cell, depth=3, visited=None, origin=None, attack=0):
         depth -= 1
         if origin.obj in moving_objects:
             for friend in dots[cell].friends:
-                if dots[cell].state and (dots[friend].defense < attack or dots[friend].state == origin.state):
+                if dots[cell].state and (dots[friend].defense < attack or dots[friend].state == origin.state) and dots[friend] not in visited:
                     for n_friend in dots[friend].friends:
                         if dots[n_friend].state == origin.state:
                             friends.add(friend)
@@ -532,13 +554,62 @@ def dfs_defense(dots, cell, depth=1, visited=None, origin=None):
         visited = set()
     if depth >= 0:
         depth -= 1
-        if cell:
+        if cell is not False:
             for friend in dots[cell].friends:
-                if dots[friend].state == origin:
+                if dots[friend].state == origin and dots[friend] not in visited:
                     friends.add(friend)
             visited.add(cell)
         for next_friend in friends:
             dfs_defense(dots, next_friend, depth, visited, origin)
+    return visited
+
+# def dfs_groups(dots, cell, visited=None, origin=None, friendi = None):
+#     print(cell, visited)
+#     friends = set()
+#     if origin is None:
+#         origin = dots[cell].state
+#     if visited is None:
+#         visited = set()
+#     if friendi is None:
+#         friendi = set()
+#     for i in dots[cell].friends:
+#         friendi.add(i)
+#     k = [x for x in friendi if x not in visited]
+#     co = 0
+#     for a in k:
+#         if dots[a].state != origin:
+#             co += 1
+#     if co == len(k):
+#         # print(visited, 'gg')
+#         return visited
+#     else:
+#         if cell is not False:
+#             # print(cell)
+#             for friend in dots[cell].friends:
+#                 if dots[friend].state == origin and dots[friend] not in visited:
+#                     friends.add(friend)
+#             # if dots[cell].state == origin:
+#             #     visited.add(cell)
+#             visited.add(cell)
+#             # print(visited)
+#         for next_friend in friends:
+#             dfs_groups(dots, next_friend, visited, origin, friendi)
+#         return visited
+#
+
+def dfs_groups(dots, cell, visited=None, origin=None):
+    friends = set()
+    if origin is None:
+        origin = dots[cell]
+    if visited is None:
+        visited = set()
+    for friend in dots[cell].friends:
+        if dots[friend].state == origin.state and dots[friend] not in visited:
+                friends.add(friend)
+    visited.add(cell)
+    for next_friend in friends:
+        if dots[next_friend].state == origin.state:
+            dfs_groups(dots, next_friend, visited, origin)
     return visited
 
 
@@ -564,6 +635,8 @@ def dfs_show(dots, start, mode, dfs_list=None):
         dfs_list = dfs_defense(dots, start)
     elif mode == 'moves':
         dfs_list = dfs_moves(dots, start)
+    elif mode == 'groups':
+        dfs_list = dfs_groups(dots, start)
     dots[start].color = (dots[start].color[0] + 75, dots[start].color[1] + 75, dots[start].color[2] + 75)
     if dfs_list is not None:
         for i in dfs_list:
@@ -665,12 +738,12 @@ def game_init():
     # player1 - красный, player2 - синий
     dots = set_defense(dots_init())
     player1 = Players(dots, 1, 200)
+    player1.group_count()
     player2 = Players(dots, 2, 200)
+    player2.group_count()
     gp = GameProcess([player1, player2], dots)
-
     starting_timer = time()
-
-    dfs_show(dots, 136, 'defense')  # Визуализация работы DFS для нахождения возможных ходов для 130 клетки
+    # dfs_show(dots, 142, 'groups')  # Визуализация работы DFS для нахождения возможных ходов для 130 клетки
 
     game = True
 
@@ -679,7 +752,6 @@ def game_init():
         for e in pg.event.get():
             if e.type == pg.QUIT:
                 game = False
-
             music_pause(e, music_button)
             game_pause(e, game_pause_button)
             digits_show(e, digits_button)
