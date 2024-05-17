@@ -2,7 +2,9 @@ import os
 import pygame as pg
 from config import theme
 
+
 pg.init()
+
 
 if theme == 'Dark':
     flag_red_image = pg.transform.scale(pg.image.load('../content/sprites_dark/flag_red.png'), (36, 36))
@@ -51,5 +53,5 @@ pg.font.init()
 f1 = pg.font.SysFont('arialblack', 18)
 
 tracks = []
-for track in os.listdir('../content//music'):
+for track in os.listdir('../content/music'):
     tracks.append(f'../content/music/{track}')
