@@ -50,7 +50,8 @@ class Players:
         self.state = state
         self.money = money
         self.flags = []
-        self.cells = cells
+        self.cells_amount = cells
+        self.cells_indexes = []
     def salary(self):
         for dot in self.dots:
             if dot.state == self.state:
@@ -110,7 +111,6 @@ class Players:
                     self.dots[cell].change_object(obj)
                     self.money -= 12
                 else:
-
                     print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
                           f"for building {obj} or another problem occurred")
             elif obj == 'tower':
@@ -187,16 +187,61 @@ class Players:
     def group_count(self):
         for cell in self.dots:
             if cell.state == self.state:
-                self.cells += 1
+                self.cells_amount += 1
+                self.cells_indexes.append(cell.counter)
                 if cell.obj == 'flag':
                     self.flags += [cell.counter]
+
+class Country:
+    def __init__(self, field, players):
+        self.field = field
+        self.players = players
+    def analyse(self):
+        for player in self.players:
+            countries = player.cells_indexes
+            for cell in self.field:
+                if cell.obj == 'flag' and cell.state == player.state:
+                    country = bfs(self.field, cell.counter)
+                    for c in country:
+                        if c in countries:
+                            countries.remove(c)
+            if countries != []:
+                print(countries, player.state)
+                while countries:
+                    country = bfs(self.field, countries[0])
+                    for c in country:
+                        if c in countries:
+                            countries.remove(c)
+                    if len(country) <= 3:
+                        for co in country:
+                            self.field[co].state = 0
+                            self.field[co].change()
+                            self.field[co].change_object('')
+                    if len(country) > 3:
+                        k = sum(country) // len(country)
+                        for i in range(len(country)-1):
+                            if country[i] == k:
+                                self.field[country[i]].change_object('flag')
+                                break
+                            elif country[i+1] == k:
+                                self.field[country[i+1]].change_object('flag')
+                                break
+                            elif country[i+1]>k and country[i]<k and k - country[i] < country[i+1] - k:
+                                self.field[country[i]].change_object('flag')
+                                break
+                            elif country[i+1]>k and country[i]<k and k - country[i] > country[i+1] - k:
+                                self.field[country[i+1]].change_object('flag')
+                                break
+        return self.field
+
 
 class GameProcess:
     sec_counter = 0
 
-    def __init__(self, players, dots):
+    def __init__(self, players, dots, analitik):
         self.players = players
         self.dots = dots
+        self.analitik = analitik
 
     def bot(self, player):
         # count = False  # Нужен ли этот count, а если нужен, то зачем?
@@ -232,8 +277,11 @@ class GameProcess:
 
     def bots(self):
         self.dots = set_defense(self.dots)
-        self.players[0] = Players(self.dots, 1, self.players[0].money)
-        self.players[1] = Players(self.dots, 2, self.players[0].money)
+        # self.players[0] = Players(self.dots, 1, self.players[0].money) почему так а не циклом? почему везде деньги 0?
+        # self.players[1] = Players(self.dots, 2, self.players[0].money)
+        for i in range(len(self.players)):
+            self.players[i] = Players(self.dots, i+1, self.players[i].money)
+            self.players[i].group_count()
         if pause_flag:
             for player in self.players:
                 self.bot(player)
@@ -243,8 +291,16 @@ class GameProcess:
                 for i in range(len(self.players)):
                     self.players[i] = Players(self.dots, i + 1, self.players[i].money)
                     self.players[i].salary()
+                    self.players[i].group_count()
+                self.analitik = Country(self.dots, self.players)
+                self.dots = self.analitik.analyse()
+                for i in range(len(self.players)):
+                    self.players[i] = Players(self.dots, i + 1, self.players[i].money)
+                    self.players[i].salary()
+                    self.players[i].group_count()
                 for cell in self.dots:
                     cell.reset()
+                pg.display.update()
             self.dots = tree_spreading(self.dots)
             for cell in self.dots:
                 cell.reset()
@@ -357,6 +413,8 @@ class GameSprite:
             self.blocked = 0
         elif obj == 'block1':
             self.blocked = 0
+        elif obj == 'flag':
+            self.obj = obj
         elif obj not in moving_objects:
             if self.obj == '':
                 self.obj = obj
@@ -386,16 +444,6 @@ class GameSprite:
             defense = 2
         return defense
 
-
-class country:
-    def __init__(self, field, players):
-        self.field == field
-        self.players = players
-
-    def analyse(self):
-        for cell in self.field:
-            if cell.obj == 'flag':
-                pass
 
 
 def dot_init(i):
@@ -563,55 +611,20 @@ def dfs_defense(dots, cell, depth=1, visited=None, origin=None):
             dfs_defense(dots, next_friend, depth, visited, origin)
     return visited
 
-# def dfs_groups(dots, cell, visited=None, origin=None, friendi = None):
-#     print(cell, visited)
-#     friends = set()
-#     if origin is None:
-#         origin = dots[cell].state
-#     if visited is None:
-#         visited = set()
-#     if friendi is None:
-#         friendi = set()
-#     for i in dots[cell].friends:
-#         friendi.add(i)
-#     k = [x for x in friendi if x not in visited]
-#     co = 0
-#     for a in k:
-#         if dots[a].state != origin:
-#             co += 1
-#     if co == len(k):
-#         # print(visited, 'gg')
-#         return visited
-#     else:
-#         if cell is not False:
-#             # print(cell)
-#             for friend in dots[cell].friends:
-#                 if dots[friend].state == origin and dots[friend] not in visited:
-#                     friends.add(friend)
-#             # if dots[cell].state == origin:
-#             #     visited.add(cell)
-#             visited.add(cell)
-#             # print(visited)
-#         for next_friend in friends:
-#             dfs_groups(dots, next_friend, visited, origin, friendi)
-#         return visited
-#
 
-def dfs_groups(dots, cell, visited=None, origin=None):
-    friends = set()
-    if origin is None:
-        origin = dots[cell]
-    if visited is None:
-        visited = set()
-    for friend in dots[cell].friends:
-        if dots[friend].state == origin.state and dots[friend] not in visited:
-                friends.add(friend)
-    visited.add(cell)
-    for next_friend in friends:
-        if dots[next_friend].state == origin.state:
-            dfs_groups(dots, next_friend, visited, origin)
+def bfs(dots, start):
+    visited = []
+    queue = []
+    visited.append(start)
+    queue.append(start)
+    start_state = dots[start].state
+    while queue:
+        cell = queue.pop(0)
+        for neighbour in dots[cell].friends:
+            if neighbour is not False and neighbour not in visited and dots[neighbour].state == start_state:
+                visited.append(neighbour)
+                queue.append(neighbour)
     return visited
-
 
 def tree_spreading(dots):
     j = randint(1, 5)
@@ -636,7 +649,7 @@ def dfs_show(dots, start, mode, dfs_list=None):
     elif mode == 'moves':
         dfs_list = dfs_moves(dots, start)
     elif mode == 'groups':
-        dfs_list = dfs_groups(dots, start)
+        dfs_list = bfs(dots, start)
     dots[start].color = (dots[start].color[0] + 75, dots[start].color[1] + 75, dots[start].color[2] + 75)
     if dfs_list is not None:
         for i in dfs_list:
@@ -741,10 +754,11 @@ def game_init():
     player1.group_count()
     player2 = Players(dots, 2, 200)
     player2.group_count()
-    gp = GameProcess([player1, player2], dots)
+    analyser = Country(dots, [player1, player2])
+    dots = analyser.analyse()
+    gp = GameProcess([player1, player2], dots, analyser)
     starting_timer = time()
     # dfs_show(dots, 142, 'groups')  # Визуализация работы DFS для нахождения возможных ходов для 130 клетки
-
     game = True
 
     while game:
@@ -764,19 +778,17 @@ def game_init():
         manager.draw_ui(window)
 
         # Стресс-тест игры:
-        if stress_test_flag:
-            listw = []
-            for i in range(1, 1000):
-                for j in range(i):
-                    listw.append(j ** 10)
-
+        # if stress_test_flag:
+        #     listw = []
+        #     for i in range(1, 1000):
+        #         for j in range(i):
+        #             listw.append(j ** 10)
         ending_timer = time()
         timer = ending_timer - starting_timer
         gp.main(timer, delay)  # delay = 0 без ограничений, delay > 0 — задержка между ходами в секундах
 
         pg.display.update()
         clock.tick(FPS)
-
 
 if __name__ == '__main__':
     game_init()
