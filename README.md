@@ -40,9 +40,5 @@
   звуковые эффекты.
 * **Стратегический анализ:** Игроки могут использовать стратегический анализ и тактические приемы, чтобы разработать
   свою игровую стратегию и победить врагов.
-*
-![peasant.png](content%2Fsprites_dark%2Fpeasant.png) ![knight.png](content%2Fsprites_dark%2Fknight.png) ![lord.png](content%2Fsprites_dark%2Flord.png)
 
-![flag_blue.png](content%2Fsprites_dark%2Fflag_blue.png) ![flag_red.png](content%2Fsprites_dark%2Fflag_red.png)
-
-![house.png](content%2Fsprites_dark%2Fhouse.png) ![tower.png](content%2Fsprites_dark%2Ftower.png) ![tree.png](content%2Fsprites_dark%2Ftree.png)
+![peasant.png](content%2Fsprites_dark%2Fpeasant.png) ![knight.png](content%2Fsprites_dark%2Fknight.png) ![lord.png](content%2Fsprites_dark%2Flord.png) ![flag_blue.png](content%2Fsprites_dark%2Fflag_blue.png) ![flag_red.png](content%2Fsprites_dark%2Fflag_red.png) ![house.png](content%2Fsprites_dark%2Fhouse.png) ![tower.png](content%2Fsprites_dark%2Ftower.png) ![tree.png](content%2Fsprites_dark%2Ftree.png)
