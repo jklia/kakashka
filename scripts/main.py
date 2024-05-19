@@ -45,32 +45,61 @@ defense_objects = ['flag', 'tower', 'peasant', 'knight', 'lord']
 
 class Players:
 
-    def __init__(self, dots, state, money=10, cells = 0):
+    def __init__(self, dots, state, money={}, cells=0):
         self.dots = dots
         self.state = state
         self.money = money
         self.flags = []
         self.cells_amount = cells
         self.cells_indexes = []
-    def salary(self):
-        for dot in self.dots:
-            if dot.state == self.state:
-                if dot.obj == 'house':
-                    self.money += 4
-                if dot.obj != 'tree':
-                    self.money += 1
-                if dot.obj == 'peasant':
-                    self.money -= 2
-                if dot.obj == 'knight':
-                    self.money -= 6
-                if dot.obj == 'lord':
-                    self.money -= 18
 
-        if self.money < 0:
-            for dot in self.dots:
-                if dot.obj in moving_objects:
-                    dot.change_object('')
-                    print(f"State {['red', 'blue'][self.state - 1]} is starving due to lack of money ({self.money})")
+    def start_money(self):
+        for i in self.flags:
+            self.money[i] = self.money[-1]
+        del self.money[-1]
+    def find_flag(self, start):
+        if self.dots[start].obj == 'flag':
+            return start
+        else:
+            visited = []
+            queue = []
+            flag = 0
+            visited.append(start)
+            queue.append(start)
+            start_state = self.state
+            while queue:
+                cell = queue.pop(0)
+                for neighbour in self.dots[cell].friends:
+                    if neighbour is not False and neighbour not in visited and self.dots[neighbour].state == start_state:
+                        visited.append(neighbour)
+                        queue.append(neighbour)
+                        if self.dots[neighbour].obj == 'flag':
+                            flag = neighbour
+                            break
+            return flag
+
+    def salary(self):
+        for cell in self.flags:
+            area = bfs(self.dots, cell)
+            for dot in area:
+                if self.dots[dot].state == self.state:
+                    if self.dots[dot].obj == 'house':
+                        self.money[cell] += 4
+                    if self.dots[dot].obj != 'tree':
+                        self.money[cell] += 1
+                    if self.dots[dot].obj == 'peasant':
+                        self.money[cell] -= 2
+                    if self.dots[dot].obj == 'knight':
+                        self.money[cell] -= 6
+                    if self.dots[dot].obj == 'lord':
+                        self.money[cell] -= 18
+
+            if self.money[cell] < 0:
+                for dot in area:
+                    if self.dots[dot].obj in moving_objects:
+                        self.dots[dot].change_object('')
+                        print(
+                            f"State {['red', 'blue'][self.state - 1]} is starving due to lack of money ({self.money})")
 
     def move(self, cell, dest):
         available_move_flag = True
@@ -103,87 +132,98 @@ class Players:
             print(f"No moves from cell {cell} to cell {dest} for state {['red', 'blue'][self.state - 1]} #3")
 
     def build(self, obj, cell):
+        print(cell)
         near = False
         block = 0
-        if self.dots[cell].land and self.dots[cell].obj not in ['house', 'flag', 'tower']:
+        change_back = True
+        changed = False
+        first_state = 0
+        forst_object = ''
+        if self.dots[cell].state != self.state:
+            changed = True
+            first_state = self.dots[cell].state
+            forst_object = self.dots[cell].obj
+            self.dots[cell].obj = ''
+            self.dots[cell].state = self.state
+            self.dots[cell].change()
+        # print(self.dots[cell].state)
+        flag = self.find_flag(cell)
+        # print(flag)
+        if self.dots[cell].land:  # and self.dots[cell].obj not in ['house', 'flag', 'tower']:
             if obj == 'house':
-                if self.money >= 12 and self.dots[cell].state == self.state and self.dots[cell].obj == '':
+                if self.money[flag] >= 12 and self.dots[cell].state == self.state and self.dots[cell].obj == '':
                     self.dots[cell].change_object(obj)
-                    self.money -= 12
+                    self.money[flag] -= 12
                 else:
                     print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
                           f"for building {obj} or another problem occurred")
             elif obj == 'tower':
-                if self.money >= 15 and self.dots[cell].state == self.state and self.dots[cell].obj == '':
+                if self.money[flag] >= 15 and self.dots[cell].state == self.state and self.dots[cell].obj == '':
                     self.dots[cell].change_object(obj)
-                    self.money -= 15
+                    self.money[flag] -= 15
                     print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
                           f"for building {obj} or another problem occurred")
             else:
-                for i in self.dots[cell].friends:
-                    if self.dots[i].state == self.state:
-                        near = True
-                        break
+                if self.dots[cell].state == self.state:
+                    near = True
+                else:
+                    for i in self.dots[cell].friends:
+                        if self.dots[i].state == self.state:
+                            near = True
+                            break
                 if near:
-                    if self.dots[cell].blocked == 1 or self.dots[cell].state != self.state or \
-                            self.dots[cell].obj == 'tree':
+                    if self.dots[cell].blocked == 1 or changed or self.dots[cell].obj == 'tree':
                         block = 1
-                    elif self.dots[cell].blocked == 0 or (
-                            self.dots[cell].state == self.state and self.dots[cell].obj == ''):
+                    elif self.dots[cell].blocked == 0 or (not (changed) and self.dots[cell].obj == ''):
                         block = 0
                     if obj == 'peasant':
-                        if (self.money >= 10 and self.dots[cell].state != self.state and self.dots[
-                            cell].defense <= 0) or (
-                                self.money >= 10 and self.dots[cell].state == self.state):
-                            if self.dots[cell].state != self.state:
-                                self.dots[cell].obj = ''
-                                self.dots[cell].state = self.state
-                                self.dots[cell].change()
+                        if ((self.money[flag] >= 10 and changed and self.dots[cell].defense <= 0) or
+                                (self.money[flag] >= 10 and not (changed))):
+                            change_back = False
                             if block == 1:
                                 self.dots[cell].change_object('block1')
                             else:
                                 self.dots[cell].change_object('block0')
                             self.dots[cell].change_object(obj)
-                            self.money -= 10
+                            self.money[flag] -= 10
                         else:
                             print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
                                   f"for building {obj} or another problem occurred")
                     elif obj == 'knight':
-                        if (self.money >= 20 and self.dots[cell].state != self.state and self.dots[
-                            cell].defense <= 0) or \
-                                (self.money >= 20 and self.dots[cell].state == self.state):
-                            if self.dots[cell].state != self.state:
-                                self.dots[cell].obj = ''
-                                self.dots[cell].state = self.state
-                                self.dots[cell].change()
+                        if (self.money[flag] >= 20 and changed and self.dots[cell].defense <= 0) or \
+                                (self.money[flag] >= 20 and not (changed)):
+                            change_back = False
                             if block == 1:
                                 self.dots[cell].change_object('block1')
                             else:
                                 self.dots[cell].change_object('block0')
                             self.dots[cell].change_object(obj)
-                            self.money -= 20
+                            self.money[flag] -= 20
+
                         else:
                             print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
                                   f"for building {obj} or another problem occurred")
                     elif obj == 'lord':
-                        if (self.money >= 30 and self.dots[cell].state != self.state and self.dots[
+                        if (self.money[flag] >= 30 and changed and self.dots[
                             cell].defense <= 0) or (
-                                self.money >= 30 and self.dots[cell].state == self.state):
-                            if self.dots[cell].state != self.state:
-                                self.dots[cell].obj = ''
-                                self.dots[cell].state = self.state
-                                self.dots[cell].change()
+                                self.money[flag] >= 30 and not(changed)):
+                            change_back = False
                             if block == 1:
                                 self.dots[cell].change_object('block1')
                             else:
                                 self.dots[cell].change_object('block0')
                             self.dots[cell].change_object(obj)
-                            self.money -= 30
+                            self.money[flag] -= 30
                         else:
                             print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
                                   f"for building {obj} or another problem occurred")
+                if changed and change_back:
+                    self.dots[cell].obj = first_object
+                    self.dots[cell].state = first_state
+                    self.dots[cell].change()
         else:
             print(f'No land to build on cell {cell}')
+
     def group_count(self):
         for cell in self.dots:
             if cell.state == self.state:
@@ -192,46 +232,41 @@ class Players:
                 if cell.obj == 'flag':
                     self.flags += [cell.counter]
 
+
 class Country:
     def __init__(self, field, players):
         self.field = field
         self.players = players
+
     def analyse(self):
         for player in self.players:
             countries = player.cells_indexes
+            two_flags = []
             for cell in self.field:
                 if cell.obj == 'flag' and cell.state == player.state:
                     country = bfs(self.field, cell.counter)
-                    for c in country:
-                        if c in countries:
-                            countries.remove(c)
+                    if sorted(country) in two_flags:
+                        cell.change_object('')
+                    else:
+                        two_flags.append(sorted(country))
+                        for c in country:
+                            if c in countries:
+                                countries.remove(c)
             if countries != []:
-                print(countries, player.state)
                 while countries:
                     country = bfs(self.field, countries[0])
-                    for c in country:
-                        if c in countries:
-                            countries.remove(c)
+                    for ci in country:
+                        if ci in countries:
+                            countries.remove(ci)
                     if len(country) <= 3:
                         for co in country:
                             self.field[co].state = 0
                             self.field[co].change()
                             self.field[co].change_object('')
                     if len(country) > 3:
-                        k = sum(country) // len(country)
-                        for i in range(len(country)-1):
-                            if country[i] == k:
-                                self.field[country[i]].change_object('flag')
-                                break
-                            elif country[i+1] == k:
-                                self.field[country[i+1]].change_object('flag')
-                                break
-                            elif country[i+1]>k and country[i]<k and k - country[i] < country[i+1] - k:
-                                self.field[country[i]].change_object('flag')
-                                break
-                            elif country[i+1]>k and country[i]<k and k - country[i] > country[i+1] - k:
-                                self.field[country[i+1]].change_object('flag')
-                                break
+                        k = choice(country)
+                        self.field[k].change_object('flag')
+                        player.money[k] = 0
         return self.field
 
 
@@ -244,7 +279,6 @@ class GameProcess:
         self.analitik = analitik
 
     def bot(self, player):
-        # count = False  # Нужен ли этот count, а если нужен, то зачем?
         for cell in self.dots:
             if cell.state == player.state:
                 if cell.obj == '':
@@ -264,11 +298,7 @@ class GameProcess:
                         f"State {['red', 'blue'][cell.state - 1]} is moving {cell.obj} from "
                         f"cell {cell.counter} to cell {choice_move}")
                     player.move(cell.counter, choice_move)
-                    # count = True
                     break
-            # if count:
-            #     break
-        # print(player.money)
 
     def game(self):
         for cell in self.dots:
@@ -280,7 +310,7 @@ class GameProcess:
         # self.players[0] = Players(self.dots, 1, self.players[0].money) почему так а не циклом? почему везде деньги 0?
         # self.players[1] = Players(self.dots, 2, self.players[0].money)
         for i in range(len(self.players)):
-            self.players[i] = Players(self.dots, i+1, self.players[i].money)
+            self.players[i] = Players(self.dots, i + 1, self.players[i].money)
             self.players[i].group_count()
         if pause_flag:
             for player in self.players:
@@ -290,17 +320,15 @@ class GameProcess:
                     i.change_object('block0')
                 for i in range(len(self.players)):
                     self.players[i] = Players(self.dots, i + 1, self.players[i].money)
-                    self.players[i].salary()
                     self.players[i].group_count()
                 self.analitik = Country(self.dots, self.players)
                 self.dots = self.analitik.analyse()
                 for i in range(len(self.players)):
                     self.players[i] = Players(self.dots, i + 1, self.players[i].money)
-                    self.players[i].salary()
                     self.players[i].group_count()
+                    self.players[i].salary()
                 for cell in self.dots:
                     cell.reset()
-                pg.display.update()
             self.dots = tree_spreading(self.dots)
             for cell in self.dots:
                 cell.reset()
@@ -445,7 +473,6 @@ class GameSprite:
         return defense
 
 
-
 def dot_init(i):
     left = [0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144]
     right = [11, 23, 35, 47, 59, 71, 83, 95, 107, 119, 131, 143, 155]
@@ -582,7 +609,8 @@ def dfs_moves(dots, cell, depth=3, visited=None, origin=None, attack=0):
         depth -= 1
         if origin.obj in moving_objects:
             for friend in dots[cell].friends:
-                if dots[cell].state and (dots[friend].defense < attack or dots[friend].state == origin.state) and dots[friend] not in visited:
+                if dots[cell].state and (dots[friend].defense < attack or dots[friend].state == origin.state) and dots[
+                    friend] not in visited:
                     for n_friend in dots[friend].friends:
                         if dots[n_friend].state == origin.state:
                             friends.add(friend)
@@ -625,6 +653,7 @@ def bfs(dots, start):
                 visited.append(neighbour)
                 queue.append(neighbour)
     return visited
+
 
 def tree_spreading(dots):
     j = randint(1, 5)
@@ -750,10 +779,12 @@ def game_init():
 
     # player1 - красный, player2 - синий
     dots = set_defense(dots_init())
-    player1 = Players(dots, 1, 200)
+    player1 = Players(dots, 1, {-1: 10})
     player1.group_count()
-    player2 = Players(dots, 2, 200)
+    player1.start_money()
+    player2 = Players(dots, 2, {-1: 10})
     player2.group_count()
+    player2.start_money()
     analyser = Country(dots, [player1, player2])
     dots = analyser.analyse()
     gp = GameProcess([player1, player2], dots, analyser)
@@ -789,6 +820,7 @@ def game_init():
 
         pg.display.update()
         clock.tick(FPS)
+
 
 if __name__ == '__main__':
     game_init()
