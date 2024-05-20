@@ -21,6 +21,8 @@ digits_flag = config.digits_flag
 music_flag = config.music_flag
 pause_flag = config.pause_flag
 stress_test_flag = config.stress_test_flag
+logs_flag = config.logs_flag
+color_cor_flag = config.color_cor_flag
 
 WIN_WIDTH = config.WIN_WIDTH
 WIN_HEIGHT = config.WIN_HEIGHT
@@ -33,13 +35,17 @@ pg.init()
 pg.display.set_icon(icon)
 clock = pg.time.Clock()
 
-window = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
-game_window = pg.Surface((WIN_WIDTH, WIN_HEIGHT-50))
-game_window.fill((0, 0, 0))
-window.fill(background_color)
-window.blit(game_window, (0, 0))
+pg.display.set_caption("Python Antiyoy")
 
-pg.display.set_caption("Antiyoy")
+window = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
+window.fill(background_color)
+
+game_window = pg.Surface((WIN_WIDTH, WIN_HEIGHT - 50))
+
+if color_cor_flag:
+    color_cor = pg.Surface((WIN_WIDTH, WIN_HEIGHT - 50))
+    color_cor.fill((22, 9, 50))
+    color_cor.set_alpha(30)
 
 objects = ['flag', 'house', 'lord', 'peasant', 'knight', 'tree', 'tower']
 moving_objects = ['peasant', 'knight', 'lord']
@@ -52,7 +58,7 @@ class Players:
 
     def __init__(self, dots, state, money=None, cells=0):
         if money is None:
-            money = dict()
+            money = {-1: 10}
         self.dots = dots
         self.state = state
         self.money = money
@@ -107,8 +113,10 @@ class Players:
                 for dot in area:
                     if self.dots[dot].obj in moving_objects:
                         self.dots[dot].change_object('')
-                        print(
-                            f"State {['red', 'blue'][self.state - 1]} is starving due to lack of money ({self.money})")
+                        if logs_flag:
+                            print(
+                                f"State {['red', 'blue'][self.state - 1]}"
+                                f"is starving due to lack of money ({self.money})")
 
     def move(self, cell, dest):
         available_move_flag = True
@@ -119,13 +127,17 @@ class Players:
                     if self.dots[dest].obj == 'lord' or (
                             self.dots[dest].obj == 'knight' and self.dots[cell].obj in ['knight', 'lord']) or (
                             self.dots[dest].obj == 'peasant' and self.dots[cell].obj == 'lord'):
-                        print(
-                            f"No moves from cell {cell} to cell {dest} for state {['red', 'blue'][self.state - 1]} #1")
+                        if logs_flag:
+                            print(
+                                f"No moves from cell {cell} to cell {dest}"
+                                f"for state {['red', 'blue'][self.state - 1]} #1")
                         available_move_flag = False
                     else:
                         self.dots[dest].change_object(self.dots[cell].obj)
                 else:
-                    print(f"No moves from cell {cell} to cell {dest} for state {['red', 'blue'][self.state - 1]} #2")
+                    if logs_flag:
+                        print(
+                            f"No moves from cell {cell} to cell {dest} for state {['red', 'blue'][self.state - 1]} #2")
                     available_move_flag = False
             else:
                 self.dots[dest].obj = self.dots[cell].obj
@@ -138,7 +150,8 @@ class Players:
                 self.dots[dest].change()
                 self.dots[cell].change()
         else:
-            print(f"No moves from cell {cell} to cell {dest} for state {['red', 'blue'][self.state - 1]} #3")
+            if logs_flag:
+                print(f"No moves from cell {cell} to cell {dest} for state {['red', 'blue'][self.state - 1]} #3")
 
     def build(self, obj, cell):
         near = False
@@ -161,14 +174,16 @@ class Players:
                     self.dots[cell].change_object(obj)
                     self.money[flag] -= 12
                 else:
-                    print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
-                          f"for building {obj} or another problem occurred")
+                    if logs_flag:
+                        print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
+                              f"for building {obj} or another problem occurred")
             elif obj == 'tower':
                 if self.money[flag] >= 15 and self.dots[cell].state == self.state and self.dots[cell].obj == '':
                     self.dots[cell].change_object(obj)
                     self.money[flag] -= 15
-                    print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
-                          f"for building {obj} or another problem occurred")
+                    if logs_flag:
+                        print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
+                              f"for building {obj} or another problem occurred")
             else:
                 if self.dots[cell].state == self.state:
                     near = True
@@ -193,8 +208,10 @@ class Players:
                             self.dots[cell].change_object(obj)
                             self.money[flag] -= 10
                         else:
-                            print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
-                                  f"for building {obj} or another problem occurred")
+                            if logs_flag:
+                                print(
+                                    f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money})"
+                                    f"for building {obj} or another problem occurred")
                     elif obj == 'knight':
                         if (self.money[flag] >= 20 and changed and self.dots[cell].defense <= 0) or \
                                 (self.money[flag] >= 20 and not changed):
@@ -207,8 +224,10 @@ class Players:
                             self.money[flag] -= 20
 
                         else:
-                            print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
-                                  f"for building {obj} or another problem occurred")
+                            if logs_flag:
+                                print(
+                                    f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money})"
+                                    f"for building {obj} or another problem occurred")
                     elif obj == 'lord':
                         if (self.money[flag] >= 30 and changed and self.dots[
                             cell].defense <= 0) or (
@@ -221,14 +240,17 @@ class Players:
                             self.dots[cell].change_object(obj)
                             self.money[flag] -= 30
                         else:
-                            print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
-                                  f"for building {obj} or another problem occurred")
+                            if logs_flag:
+                                print(
+                                    f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money})"
+                                    f"for building {obj} or another problem occurred")
                 if changed and change_back:
                     self.dots[cell].obj = first_object
                     self.dots[cell].state = first_state
                     self.dots[cell].change()
         else:
-            print(f'No land to build on cell {cell}')
+            if logs_flag:
+                print(f'No land to build on cell {cell}')
 
     def group_count(self):
         for cell in self.dots:
@@ -284,18 +306,28 @@ class Country:
 class GameProcess:
     sec_counter = 0
     win_flag = False
+    winner = None
 
     def __init__(self, players, dots, analyzer):
         self.players = players
         self.dots = dots
         self.analyzer = analyzer
+        self.players_area = dict()
+        # self.players_area = dict.fromkeys([i.state for i in self.players], 0)
+        self.available_area = 0
+        for dot in self.dots:
+            if dot.land != 0:
+                self.available_area += 1
 
     def bot(self, player):
         for cell in self.dots:
             if cell.state == player.state:
                 if cell.obj == '':
                     choice_object = choice(['peasant', 'knight', 'house', 'tower', 'lord'])
-                    print(f"State {['red', 'blue'][cell.state - 1]} is building {choice_object} on cell {cell.counter}")
+                    if logs_flag:
+                        print(
+                            f"State {['red', 'blue'][cell.state - 1]}"
+                            f"is building {choice_object} on cell {cell.counter}")
                     player.build(choice_object, cell.counter)
                 elif cell.obj in moving_objects:
                     moves_list = list(dfs_moves(self.dots, cell.counter))
@@ -306,9 +338,10 @@ class GameProcess:
                     if not list_to_move:
                         list_to_move = moves_list
                     choice_move = choice(list_to_move)
-                    print(
-                        f"State {['red', 'blue'][cell.state - 1]} is moving {cell.obj} from "
-                        f"cell {cell.counter} to cell {choice_move}")
+                    if logs_flag:
+                        print(
+                            f"State {['red', 'blue'][cell.state - 1]} is moving {cell.obj} from "
+                            f"cell {cell.counter} to cell {choice_move}")
                     player.move(cell.counter, choice_move)
                     break
 
@@ -336,13 +369,33 @@ class GameProcess:
     #                     if g == 0:
     #                         player.move(dot.counter, cells[0])
 
+    # def state_land_counter(self):
+    #     self.players_area = dict.fromkeys([i.state for i in self.players], 0)
+    #     for player in self.players:
+    #         for dot in self.dots:
+    #             if dot.state == player.state:
+    #                 self.players_area[player.state] += 1
+    #         print(player.state, self.players_area[player.state])
+
+    def win_checker(self):
+        self.players_area = state_counter(self.dots, self.players)
+        for player in self.players:
+            if self.players_area[player.state] > self.available_area * 0.75:
+                self.win_flag = True
+                self.winner = player
 
     def game(self):
         for cell in self.dots:
             cell.reset()
+        window.blit(game_window, (0, 0))
+        if color_cor_flag:
+            window.blit(color_cor, (0, 0))
+        if self.win_flag:
+            win_screen(self.winner)
         pg.display.update()
 
     def bots(self):
+        self.win_checker()
         self.dots = set_defense(self.dots)
         for i in range(len(self.players)):
             self.players[i] = Players(self.dots, i + 1, self.players[i].money)
@@ -368,18 +421,15 @@ class GameProcess:
             for cell in self.dots:
                 cell.reset()
 
-    def win_screen(self, winer):
-        # pg.draw.rect(game_window, (0, 0, 0), (0, 0, WIN_WIDTH, WIN_HEIGHT-50))
-        game_window.fill((0,0,0))
     def main(self, timer, delay_time):
-        self.win_screen(1)
         self.game()
-        if delay_time == 0:
-            self.bots()
-        else:
-            if (timer // delay_time) != self.sec_counter:
+        if not self.win_flag:
+            if delay_time == 0:
                 self.bots()
-                self.sec_counter = timer // delay_time
+            else:
+                if (timer // delay_time) != self.sec_counter:
+                    self.bots()
+                    self.sec_counter = timer // delay_time
 
 
 class GameSprite:
@@ -418,37 +468,37 @@ class GameSprite:
 
     def reset(self):
         if self.land != 0:
-            gfxdraw.filled_polygon(window,
+            gfxdraw.filled_polygon(game_window,
                                    (self.point1, self.point2, self.point3, self.point4, self.point5, self.point6),
                                    self.color)
-            pg.draw.lines(window, background_color, True,
+            pg.draw.lines(game_window, background_color, True,
                           (self.point1, self.point2, self.point3, self.point4, self.point5, self.point6), width=1)
 
         if self.obj == 'flag':
             if self.state == 1:
-                window.blit(flag_shadow_image, (self.x - 9, self.y - 12))
-                window.blit(flag_red_image, (self.x - 10, self.y - 30))
+                game_window.blit(flag_shadow_image, (self.x - 9, self.y - 12))
+                game_window.blit(flag_red_image, (self.x - 10, self.y - 30))
             elif self.state == 2:
-                window.blit(flag_shadow_image, (self.x - 9, self.y - 12))
-                window.blit(flag_blue_image, (self.x - 10, self.y - 30))
+                game_window.blit(flag_shadow_image, (self.x - 9, self.y - 12))
+                game_window.blit(flag_blue_image, (self.x - 10, self.y - 30))
         elif self.obj == 'house':
-            window.blit(house_shadow_image, (self.x - 30, self.y - 20))
-            window.blit(house_image, (self.x - 15, self.y - 22))
+            game_window.blit(house_shadow_image, (self.x - 30, self.y - 20))
+            game_window.blit(house_image, (self.x - 15, self.y - 22))
         elif self.obj == 'tower':
-            window.blit(tower_shadow_image, (self.x - 29, self.y - 20))
-            window.blit(tower_image, (self.x - 21, self.y - 34))
+            game_window.blit(tower_shadow_image, (self.x - 29, self.y - 20))
+            game_window.blit(tower_image, (self.x - 21, self.y - 34))
         elif self.obj == 'peasant':
-            window.blit(person_shadow_image, (self.x - 19, self.y - 16))
-            window.blit(peasant_image, (self.x - 18, self.y - 27))
+            game_window.blit(person_shadow_image, (self.x - 19, self.y - 16))
+            game_window.blit(peasant_image, (self.x - 18, self.y - 27))
         elif self.obj == 'knight':
-            window.blit(person_shadow_image, (self.x - 19, self.y - 16))
-            window.blit(knight_image, (self.x - 18, self.y - 27))
+            game_window.blit(person_shadow_image, (self.x - 19, self.y - 16))
+            game_window.blit(knight_image, (self.x - 18, self.y - 27))
         elif self.obj == 'lord':
-            window.blit(person_shadow_image, (self.x - 19, self.y - 16))
-            window.blit(lord_image, (self.x - 18, self.y - 27))
+            game_window.blit(person_shadow_image, (self.x - 19, self.y - 16))
+            game_window.blit(lord_image, (self.x - 18, self.y - 27))
         elif self.obj == 'tree':
-            window.blit(tree_shadow_image, (self.x - 26, self.y - 22))
-            window.blit(tree_image, (self.x - 19, self.y - 30))
+            game_window.blit(tree_shadow_image, (self.x - 26, self.y - 22))
+            game_window.blit(tree_image, (self.x - 19, self.y - 30))
         if digits_flag:
             text = f1.render(str(self.counter), True, (196, 196, 30))
             text.set_alpha(210)
@@ -457,9 +507,9 @@ class GameSprite:
             place = text.get_rect(center=(self.x, self.y))
             place_shadow1 = text_shadow.get_rect(center=(self.x + 1, self.y + 2))
             place_shadow2 = text_shadow.get_rect(center=(self.x, self.y - 1))
-            window.blit(text_shadow, place_shadow1)
-            window.blit(text_shadow, place_shadow2)
-            window.blit(text, place)
+            game_window.blit(text_shadow, place_shadow1)
+            game_window.blit(text_shadow, place_shadow2)
+            game_window.blit(text, place)
 
     def change(self):
         if self.land == 0:
@@ -804,26 +854,62 @@ def button_manager():
     return manager, music_button, digits_button, game_pause_button, freezer_button
 
 
+def win_screen(winner):
+    end_window = pg.Surface((WIN_WIDTH, WIN_HEIGHT - 50))
+
+    text = f2.render('GAME OVER', False, (166, 166, 0))
+    place = text.get_rect(center=(WIN_WIDTH // 2, (WIN_HEIGHT - 200) // 2))
+
+    text_shadow = f2.render('GAME OVER', False, (0, 0, 0))
+    place_shadow = text.get_rect(center=(WIN_WIDTH // 2, (WIN_HEIGHT - 200) // 2 + 3))
+
+    info_text = f3.render(f'Player #{winner.state} wins', False, state_accent_colors[winner.state - 1])
+    place_info = info_text.get_rect(center=(WIN_WIDTH // 2, (WIN_HEIGHT - 200) // 2 + 100))
+
+    info_shadow = f3.render(f'Player #{winner.state} wins', False, (0, 0, 0))
+    place_shadow_info = info_text.get_rect(center=(WIN_WIDTH // 2, (WIN_HEIGHT - 200) // 2 + 103))
+
+    end_window.fill((0, 0, 0))
+    end_window.set_alpha(200)
+
+    window.blit(end_window, (0, 0))
+    window.blit(text_shadow, place_shadow)
+    window.blit(text, place)
+    window.blit(info_shadow, place_shadow_info)
+    window.blit(info_text, place_info)
+
+
+def state_counter(dots, players):
+    players_area = dict.fromkeys([player.state for player in players], 0)
+    for player in players:
+        for dot in dots:
+            if dot.state == player.state:
+                players_area[player.state] += 1
+    return players_area
+
+
 def game_init():
     manager, music_button, digits_button, game_pause_button, freezer_button = button_manager()
 
     pg.mixer.music.load(tracks[randint(0, len(tracks) - 1)])
-    pg.mixer.music.set_volume(music_volume)
+    pg.mixer.music.set_volume(0)
     pg.mixer.music.play(-1)
     if not music_flag:
         pg.mixer.music.pause()
+    pg.mixer.music.set_volume(music_volume)
 
     # player1 - красный, player2 - синий
     dots = set_defense(dots_init())
-    player1 = Players(dots, 1, {-1: 10})
+    player1 = Players(dots, 1)
     player1.group_count()
     player1.start_money()
-    player2 = Players(dots, 2, {-1: 10})
+    player2 = Players(dots, 2)
     player2.group_count()
     player2.start_money()
     analyser = Country(dots, [player1, player2])
     dots = analyser.analyse()
     gp = GameProcess([player1, player2], dots, analyser)
+
     starting_timer = time()
     # show(dots, 124, 'groups')  # Визуализация работы DFS для нахождения возможных ходов для 130 клетки
 
@@ -842,15 +928,15 @@ def game_init():
             manager.process_events(e)
 
         manager.update(time_delta)
-        window.blit(background_image, (0, 0))
+        game_window.blit(background_image, (0, 0))
         manager.draw_ui(window)
 
         # Стресс-тест игры:
-        # if stress_test_flag:
-        #     listw = []
-        #     for i in range(1, 1000):
-        #         for j in range(i):
-        #             listw.append(j ** 10)
+        if stress_test_flag:
+            listw = []
+            for i in range(1, 1000):
+                for j in range(i):
+                    listw.append(j ** 10)
 
         ending_timer = time()
         timer = ending_timer - starting_timer

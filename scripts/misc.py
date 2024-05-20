@@ -17,9 +17,10 @@ if theme == 'Dark':
     icon = pg.image.load('../content/sprites_dark/icon.png')
     background_image = pg.image.load('../content/sprites_dark/background.png')
 
-    background_color = (15, 15, 30)
+    background_color = (8, 8, 16)
     main_color = (45, 46, 58)
     state_colors = [(114, 46, 48), (23, 59, 112)]
+    state_accent_colors = [(174, 56, 58), (33, 69, 172)]
 
 elif theme == 'Light':
     flag_red_image = pg.transform.scale(pg.image.load('../content/sprites_light/flag_red.png'), (36, 36))
@@ -36,6 +37,7 @@ elif theme == 'Light':
     background_color = (15, 15, 30)
     main_color = (45, 46, 58)
     state_colors = [(131, 46, 46), (17, 62, 125)]
+    state_accent_colors = [(174, 56, 58), (33, 69, 172)]
 
 person_shadow_image = pg.transform.scale(pg.image.load('../content/sprites_dark/shadow.png'), (38, 48))
 person_shadow_image.set_alpha(70)
@@ -50,6 +52,11 @@ flag_shadow_image.set_alpha(70)
 
 pg.font.init()
 f1 = pg.font.SysFont('arialblack', 18)
+# f2 = pg.font.Font('../content/fonts/arcade.ttf', 72)
+# f3 = pg.font.Font('../content/fonts/telesys.ttf', 72)
+# f1 = pg.font.Font('../content/fonts/terminal.ttf', 36)
+f2 = pg.font.Font('../content/fonts/terminal_bold.ttf', 82)
+f3 = pg.font.Font('../content/fonts/terminal_bold.ttf', 42)
 
 tracks = []
 for track in os.listdir('../content/music'):
