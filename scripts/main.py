@@ -115,8 +115,8 @@ class Players:
                         self.dots[dot].change_object('')
                         if logs_flag:
                             print(
-                                f"State {['red', 'blue'][self.state - 1]} "
-                                f"is starving due to lack of money ({self.money})")
+                                f"State {['red', 'blue'][self.state - 1]}"
+                                f" is starving due to lack of money ({self.money})")
 
     def move(self, cell, dest):
         available_move_flag = True
@@ -129,8 +129,8 @@ class Players:
                             self.dots[dest].obj == 'peasant' and self.dots[cell].obj == 'lord'):
                         if logs_flag:
                             print(
-                                f"No moves from cell {cell} to cell {dest} "
-                                f"for state {['red', 'blue'][self.state - 1]} #1")
+                                f"No moves from cell {cell} to cell {dest}"
+                                f" for state {['red', 'blue'][self.state - 1]} #1")
                         available_move_flag = False
                     else:
                         self.dots[dest].change_object(self.dots[cell].obj)
@@ -175,15 +175,15 @@ class Players:
                     self.money[flag] -= 12
                 else:
                     if logs_flag:
-                        print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
-                              f"for building {obj} or another problem occurred")
+                        print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money})"
+                              f" for building {obj} or another problem occurred")
             elif obj == 'tower':
                 if self.money[flag] >= 15 and self.dots[cell].state == self.state and self.dots[cell].obj == '':
                     self.dots[cell].change_object(obj)
                     self.money[flag] -= 15
                     if logs_flag:
-                        print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money}) "
-                              f"for building {obj} or another problem occurred")
+                        print(f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money})"
+                              f" for building {obj} or another problem occurred")
             else:
                 if self.dots[cell].state == self.state:
                     near = True
@@ -328,7 +328,7 @@ class GameProcess:
                     if logs_flag:
                         print(
                             f"State {['red', 'blue'][cell.state - 1]}"
-                            f"is building {choice_object} on cell {cell.counter}")
+                            f" is building {choice_object} on cell {cell.counter}")
                     player.build(choice_object, cell.counter)
                 elif cell.obj in moving_objects:
                     moves_list = list(dfs_moves(self.dots, cell.counter))
@@ -341,8 +341,8 @@ class GameProcess:
                     choice_move = choice(list_to_move)
                     if logs_flag:
                         print(
-                            f"State {['red', 'blue'][cell.state - 1]} is moving {cell.obj} from "
-                            f"cell {cell.counter} to cell {choice_move}")
+                            f"State {['red', 'blue'][cell.state - 1]} is moving {cell.obj} from"
+                            f" cell {cell.counter} to cell {choice_move}")
                     player.move(cell.counter, choice_move)
                     break
 
@@ -386,7 +386,7 @@ class GameProcess:
                 self.winner = player
                 if logs_flag and not self.logs_deployed:
                     self.logs_deployed = True
-                    print(f'State {['red', 'blue'][self.winner.state - 1]} win due to the capture of most territories')
+                    print(f"State {['red', 'blue'][self.winner.state - 1]} wins due to the capture of most territories")
 
     def game(self):
         for cell in self.dots:
@@ -449,7 +449,7 @@ class GameProcess:
             self.winner = self.players[max(players_dict, key=players_dict.get) - 1]
             if logs_flag and not self.logs_deployed:
                 self.logs_deployed = True
-                print(f'State {['red', 'blue'][self.winner.state - 1]} wins due to passivity of all states')
+                print(f"State {['red', 'blue'][self.winner.state - 1]} wins due to passivity of all states")
 
 
 class GameSprite:
