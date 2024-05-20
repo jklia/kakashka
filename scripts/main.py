@@ -34,6 +34,11 @@ pg.display.set_icon(icon)
 clock = pg.time.Clock()
 
 window = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
+game_window = pg.Surface((WIN_WIDTH, WIN_HEIGHT-50))
+game_window.fill((0, 0, 0))
+window.fill(background_color)
+window.blit(game_window, (0, 0))
+
 pg.display.set_caption("Antiyoy")
 
 objects = ['flag', 'house', 'lord', 'peasant', 'knight', 'tree', 'tower']
@@ -243,13 +248,18 @@ class Country:
         for player in self.players:
             cells = player.cells_indexes
             multiple_flags = []
+            multiple = []
             for cell in self.dots:
                 if cell.obj == 'flag' and cell.state == player.state:
                     country_cells = bfs_group(self.dots, cell.counter)
                     if sorted(country_cells) in multiple_flags:
+                        ind = multiple_flags.index(sorted(country_cells))
+                        player.money[multiple[ind]] += player.money[cell.counter]
+                        del player.money[cell.counter]
                         cell.change_object('')
                     else:
                         multiple_flags.append(sorted(country_cells))
+                        multiple.append(cell.counter)
                         for cell_to_del in country_cells:
                             if cell_to_del in cells:
                                 cells.remove(cell_to_del)
@@ -273,6 +283,7 @@ class Country:
 
 class GameProcess:
     sec_counter = 0
+    win_flag = False
 
     def __init__(self, players, dots, analyzer):
         self.players = players
@@ -300,6 +311,31 @@ class GameProcess:
                         f"cell {cell.counter} to cell {choice_move}")
                     player.move(cell.counter, choice_move)
                     break
+
+    # def adaptive_bot(self, player):
+    #     available_area = 0
+    #     our_area = 0
+    #     while our_area / (available_area / 100) < 40:
+    #         available_area = 0
+    #         our_area = 0
+    #         for dot in self.dots:
+    #             if dot.land != 0:
+    #                 available_area += 1
+    #             if dot.state == player.state:
+    #                 our_area += 1
+    #         if our_area / (available_area / 100) < 40:
+    #             for dot in self.dots:
+    #                 if dot.obj in moving_objects:
+    #                     cells = list(dfs_moves(self.dots, dot.counter))
+    #                     g = 0
+    #                     for cell in cells:
+    #                         if self.dots[cell].state != player.state and dot.defense >= self.dots[cell].defense:
+    #                             g += 1
+    #                             player.move(dot.counter, cell)
+    #                             break
+    #                     if g == 0:
+    #                         player.move(dot.counter, cells[0])
+
 
     def game(self):
         for cell in self.dots:
@@ -332,7 +368,11 @@ class GameProcess:
             for cell in self.dots:
                 cell.reset()
 
+    def win_screen(self, winer):
+        # pg.draw.rect(game_window, (0, 0, 0), (0, 0, WIN_WIDTH, WIN_HEIGHT-50))
+        game_window.fill((0,0,0))
     def main(self, timer, delay_time):
+        self.win_screen(1)
         self.game()
         if delay_time == 0:
             self.bots()
@@ -785,7 +825,7 @@ def game_init():
     dots = analyser.analyse()
     gp = GameProcess([player1, player2], dots, analyser)
     starting_timer = time()
-    # dfs_show(dots, 124, 'groups')  # Визуализация работы DFS для нахождения возможных ходов для 130 клетки
+    # show(dots, 124, 'groups')  # Визуализация работы DFS для нахождения возможных ходов для 130 клетки
 
     game = True
 
