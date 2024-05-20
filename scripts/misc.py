@@ -2,7 +2,6 @@ import os
 import pygame as pg
 from config import theme
 
-
 pg.init()
 
 if theme == 'Dark':
@@ -52,9 +51,6 @@ flag_shadow_image.set_alpha(70)
 
 pg.font.init()
 f1 = pg.font.SysFont('arialblack', 18)
-# f2 = pg.font.Font('../content/fonts/arcade.ttf', 72)
-# f3 = pg.font.Font('../content/fonts/telesys.ttf', 72)
-# f1 = pg.font.Font('../content/fonts/terminal.ttf', 36)
 f2 = pg.font.Font('../content/fonts/terminal_bold.ttf', 82)
 f3 = pg.font.Font('../content/fonts/terminal_bold.ttf', 42)
 

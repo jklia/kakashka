@@ -2,12 +2,6 @@ import pytest
 from main import Players, Country, GameProcess, dot_init, dots_init
 
 
-# def test_player_initial_money():
-#     dots = dots_init()
-#     player = Players(dots, state=1)
-#     assert player.money == 10
-
-
 def test_game_sprite_creation():
     sprite = dot_init(0)
     assert sprite.counter == 0
@@ -43,20 +37,6 @@ def test_move_peasant():
     player.move(count1, count2)
     assert dots[count1].obj == ''
     assert dots[count2].obj == 'peasant'
-
-
-# def test_build_house():
-#     dots = dots_init()
-#     count = 0
-#     for dot in dots:
-#         if dot.obj == '' and dot.state == 0 and dot.land != 0:
-#             count = dot.counter
-#             break
-#     dots[count].state = 1
-#     player = Players(dots, state=1, money=20)
-#     player.build('house', count)
-#     assert dots[count].obj == 'house'
-#     assert player.money == 8  # 20 initial money - 12 for house
 
 
 @pytest.fixture

@@ -115,7 +115,7 @@ class Players:
                         self.dots[dot].change_object('')
                         if logs_flag:
                             print(
-                                f"State {['red', 'blue'][self.state - 1]}"
+                                f"State {['red', 'blue'][self.state - 1]} "
                                 f"is starving due to lack of money ({self.money})")
 
     def move(self, cell, dest):
@@ -129,7 +129,7 @@ class Players:
                             self.dots[dest].obj == 'peasant' and self.dots[cell].obj == 'lord'):
                         if logs_flag:
                             print(
-                                f"No moves from cell {cell} to cell {dest}"
+                                f"No moves from cell {cell} to cell {dest} "
                                 f"for state {['red', 'blue'][self.state - 1]} #1")
                         available_move_flag = False
                     else:
@@ -211,7 +211,7 @@ class Players:
                             if logs_flag:
                                 print(
                                     f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money})"
-                                    f"for building {obj} or another problem occurred")
+                                    f" for building {obj} or another problem occurred")
                     elif obj == 'knight':
                         if (self.money[flag] >= 20 and changed and self.dots[cell].defense <= 0) or \
                                 (self.money[flag] >= 20 and not changed):
@@ -227,7 +227,7 @@ class Players:
                             if logs_flag:
                                 print(
                                     f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money})"
-                                    f"for building {obj} or another problem occurred")
+                                    f" for building {obj} or another problem occurred")
                     elif obj == 'lord':
                         if (self.money[flag] >= 30 and changed and self.dots[
                             cell].defense <= 0) or (
@@ -243,7 +243,7 @@ class Players:
                             if logs_flag:
                                 print(
                                     f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money})"
-                                    f"for building {obj} or another problem occurred")
+                                    f" for building {obj} or another problem occurred")
                 if changed and change_back:
                     self.dots[cell].obj = first_object
                     self.dots[cell].state = first_state
@@ -304,20 +304,21 @@ class Country:
 
 
 class GameProcess:
-    sec_counter = 0
-    win_flag = False
-    winner = None
-
     def __init__(self, players, dots, analyzer):
         self.players = players
         self.dots = dots
         self.analyzer = analyzer
-        self.players_area = dict()
-        # self.players_area = dict.fromkeys([i.state for i in self.players], 0)
         self.available_area = 0
         for dot in self.dots:
             if dot.land != 0:
                 self.available_area += 1
+        self.last_count = state_counter(self.dots, self.players)
+        self.sec_counter = 0
+        self.changes_timer = 0
+        self.win_flag = False
+        self.winner = None
+        self.players_area = dict()
+        self.logs_deployed = False
 
     def bot(self, player):
         for cell in self.dots:
@@ -383,6 +384,9 @@ class GameProcess:
             if self.players_area[player.state] > self.available_area * 0.75:
                 self.win_flag = True
                 self.winner = player
+                if logs_flag and not self.logs_deployed:
+                    self.logs_deployed = True
+                    print(f'State {['red', 'blue'][self.winner.state - 1]} win due to the capture of most territories')
 
     def game(self):
         for cell in self.dots:
@@ -395,12 +399,17 @@ class GameProcess:
         pg.display.update()
 
     def bots(self):
-        self.win_checker()
-        self.dots = set_defense(self.dots)
-        for i in range(len(self.players)):
-            self.players[i] = Players(self.dots, i + 1, self.players[i].money)
-            self.players[i].group_count()
-        if pause_flag:
+        if not pause_flag:
+            if self.last_count == state_counter(self.dots, self.players):
+                self.changes_timer += 1
+            else:
+                self.changes_timer = 0
+            self.last_count = state_counter(self.dots, self.players)
+
+            for i in range(len(self.players)):
+                self.players[i] = Players(self.dots, i + 1, self.players[i].money)
+                self.players[i].group_count()
+
             for player in self.players:
                 self.bot(player)
                 self.dots = set_defense(self.dots)
@@ -417,19 +426,30 @@ class GameProcess:
                     self.players[i].salary()
                 for cell in self.dots:
                     cell.reset()
+
+            self.win_checker()
+            self.dots = set_defense(self.dots)
             self.dots = tree_spreading(self.dots)
             for cell in self.dots:
                 cell.reset()
 
     def main(self, timer, delay_time):
         self.game()
-        if not self.win_flag:
+        if not self.win_flag and self.changes_timer < 10:
             if delay_time == 0:
                 self.bots()
             else:
                 if (timer // delay_time) != self.sec_counter:
                     self.bots()
                     self.sec_counter = timer // delay_time
+
+        else:
+            self.win_flag = True
+            players_dict = state_counter(self.dots, self.players)
+            self.winner = self.players[max(players_dict, key=players_dict.get) - 1]
+            if logs_flag and not self.logs_deployed:
+                self.logs_deployed = True
+                print(f'State {['red', 'blue'][self.winner.state - 1]} wins due to passivity of all states')
 
 
 class GameSprite:
@@ -778,10 +798,10 @@ def game_pause(e, button):
         if e.ui_element == button:
             if pause_flag:
                 pause_flag = False
-                button.set_text('Game ON')
+                button.set_text('Game OFF')
             else:
                 pause_flag = True
-                button.set_text('Game OFF')
+                button.set_text('Game ON')
 
 
 def digits_show(e, button):
@@ -838,9 +858,9 @@ def button_manager():
     digits_button = pygame_gui.elements.UIButton(relative_rect=pg.Rect((WIN_WIDTH - 282, WIN_HEIGHT - 45), (131, 40)),
                                                  text=dg_text, manager=manager)
     if pause_flag:
-        p_text = 'Game OFF'
-    else:
         p_text = 'Game ON'
+    else:
+        p_text = 'Game OFF'
     game_pause_button = pygame_gui.elements.UIButton(
         relative_rect=pg.Rect((WIN_WIDTH - 423, WIN_HEIGHT - 45), (131, 40)),
         text=p_text, manager=manager)
