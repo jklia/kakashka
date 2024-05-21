@@ -38,7 +38,7 @@ clock = pg.time.Clock()
 pg.display.set_caption("Python Antiyoy")
 
 window = pg.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
-# window.fill("YELLOW")
+window.fill(background_color)
 
 game_window = pg.Surface((WIN_WIDTH, WIN_HEIGHT - 50))
 
@@ -229,7 +229,7 @@ class Players:
                                     f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money})"
                                     f" for building {obj} or another problem occurred")
                     elif obj == 'lord':
-                        if (self.money[flag] >= 30 and changed and self.dots[cell].defense <= 2) or (
+                        if (self.money[flag] >= 30 and changed) or (
                                 self.money[flag] >= 30 and not changed):
                             change_back = False
                             if block == 1:
@@ -359,7 +359,7 @@ class GameProcess:
                 get = 0
                 spend = 0
                 for dot in area:
-                    if self.dots[dot].obj == 'knite':
+                    if self.dots[dot].obj == 'knight':
                         spend += 6
                     if self.dots[dot].obj == 'lord':
                         spend += 18
@@ -377,7 +377,8 @@ class GameProcess:
                         else:
                             cells.sort(reverse=True)
                         for cell in cells:
-                            if self.dots[cell].state != player.state and self.dots[dot].defense >= self.dots[cell].defense:
+                            if self.dots[cell].state != player.state and \
+                                    self.dots[dot].defense >= self.dots[cell].defense:
                                 g += 1
                                 player.move(dot, cell)
                                 break
@@ -393,7 +394,7 @@ class GameProcess:
                                 player.move(dot, min(cells))
                 if get - spend >= 2:
                     border_cells = bfs_borders(self.dots, flag)
-                    for i in range(min((get-spend)//2, len(border_cells))):
+                    for i in range(min((get - spend) // 2, len(border_cells))):
                         if self.dots[border_cells[i]].defense == 0:
                             player.build('peasant', border_cells[i])
         else:
@@ -403,7 +404,7 @@ class GameProcess:
                 spend = 0
                 free_area_cells = []
                 for dot in area:
-                    if self.dots[dot].obj == 'knite':
+                    if self.dots[dot].obj == 'knight':
                         spend += 6
                     if self.dots[dot].obj == 'lord':
                         spend += 18
@@ -415,7 +416,7 @@ class GameProcess:
                         get += 4
                     if self.dots[dot].obj == '':
                         free_area_cells.append(dot)
-                if get-spend >= 30 and get-spend < 50:
+                if 30 <= get - spend < 50:
                     for dot in area:
                         if self.dots[dot].obj in moving_objects:
                             cells = list(dfs_moves(self.dots, dot))
@@ -424,7 +425,8 @@ class GameProcess:
                             else:
                                 cells.sort(reverse=True)
                                 for cell in cells:
-                                    if self.dots[cell].state != player.state and self.dots[dot].defense >= self.dots[cell].defense:
+                                    if self.dots[cell].state != player.state and \
+                                            self.dots[dot].defense >= self.dots[cell].defense:
                                         player.move(dot, cell)
                                         break
                                     elif self.dots[cell].state == player.state and self.dots[cell].obj == 'tree':
@@ -434,10 +436,10 @@ class GameProcess:
                         free_area_cells.sort()
                     else:
                         free_area_cells.sort(reverse=True)
-                    for i in range(min((get-spend)//12, len(free_area_cells))):
+                    for i in range(min((get - spend) // 12, len(free_area_cells))):
                         player.build('house', free_area_cells[i])
 
-                elif get-spend < 30:
+                elif get - spend < 30:
                     for dot in area:
                         if self.dots[dot].obj in moving_objects:
                             cells = list(dfs_moves(self.dots, dot))
@@ -446,8 +448,8 @@ class GameProcess:
                             else:
                                 cells.sort()
                             for cell in cells:
-                                print('hhhhh')
-                                if self.dots[cell].state != player.state and self.dots[dot].defense >= self.dots[cell].defense:
+                                if self.dots[cell].state != player.state and \
+                                        self.dots[dot].defense >= self.dots[cell].defense:
                                     player.move(dot, cell)
                                     break
                                 elif self.dots[cell].state == player.state and self.dots[cell].obj == 'tree':
@@ -468,7 +470,7 @@ class GameProcess:
                                     elif player.state == self.dots[f].state and ind > 0:
                                         self.dots[f].defense = 2
                         # i += 1
-                elif get - spend >= 50 and get-spend < 70:
+                elif 50 <= get - spend < 70:
                     for dot in area:
                         if self.dots[dot].obj in moving_objects:
                             cells = list(dfs_moves(self.dots, dot))
@@ -478,11 +480,13 @@ class GameProcess:
                             else:
                                 cells.sort(reverse=True)
                             for cell in cells:
-                                if self.dots[cell].state != player.state and self.dots[dot].defense >= self.dots[cell].defense:
+                                if self.dots[cell].state != player.state and \
+                                        self.dots[dot].defense >= self.dots[cell].defense:
                                     g += 1
                                     player.move(dot, cell)
                                     break
-                                elif self.dots[cell].state == player.state and self.dots[cell].defense + self.dots[dot].defense <= 3:
+                                elif self.dots[cell].state == player.state and \
+                                        self.dots[cell].defense + self.dots[dot].defense <= 3:
                                     g += 1
                                     player.move(dot, cell)
                                     break
@@ -506,12 +510,13 @@ class GameProcess:
                             else:
                                 cells.sort(reverse=True)
                             for cell in cells:
-                                if self.dots[cell].state != player.state and self.dots[dot].defense >= self.dots[
-                                    cell].defense:
+                                if self.dots[cell].state != player.state and \
+                                        self.dots[dot].defense >= self.dots[cell].defense:
                                     g += 1
                                     player.move(dot, cell)
                                     break
-                                elif self.dots[cell].state == player.state and self.dots[cell].defense + self.dots[dot].defense <= 3:
+                                elif self.dots[cell].state == player.state and \
+                                        self.dots[cell].defense + self.dots[dot].defense <= 3:
                                     g += 1
                                     player.move(dot, cell)
                                     break
@@ -524,21 +529,6 @@ class GameProcess:
                         border_cells = bfs_borders(self.dots, flag)
                         for i in range(min((get - spend) // 18, len(border_cells))):
                             player.build('lord', border_cells[i])
-
-
-
-
-
-
-
-
-    # def state_land_counter(self):
-    #     self.players_area = dict.fromkeys([i.state for i in self.players], 0)
-    #     for player in self.players:
-    #         for dot in self.dots:
-    #             if dot.state == player.state:
-    #                 self.players_area[player.state] += 1
-    #         print(player.state, self.players_area[player.state])
 
     def win_checker(self):
         self.players_area = state_counter(self.dots, self.players)
@@ -911,7 +901,6 @@ def dfs_defense(dots, cell, depth=1, visited=None, origin=None):
     return visited
 
 
-
 def bfs_group(dots, start):
     visited = []
     queue = []
@@ -925,6 +914,7 @@ def bfs_group(dots, start):
                 visited.append(neighbour)
                 queue.append(neighbour)
     return visited
+
 
 def bfs_borders(dots, start):
     visited = []
