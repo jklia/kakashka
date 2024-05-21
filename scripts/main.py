@@ -213,7 +213,7 @@ class Players:
                                     f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money})"
                                     f" for building {obj} or another problem occurred")
                     elif obj == 'knight':
-                        if (self.money[flag] >= 20 and changed and self.dots[cell].defense <= 0) or \
+                        if (self.money[flag] >= 20 and changed and self.dots[cell].defense <= 1) or \
                                 (self.money[flag] >= 20 and not changed):
                             change_back = False
                             if block == 1:
@@ -229,8 +229,7 @@ class Players:
                                     f"State {['red', 'blue'][self.state - 1]} does not have enough money ({self.money})"
                                     f" for building {obj} or another problem occurred")
                     elif obj == 'lord':
-                        if (self.money[flag] >= 30 and changed and self.dots[
-                            cell].defense <= 0) or (
+                        if (self.money[flag] >= 30 and changed) or (
                                 self.money[flag] >= 30 and not changed):
                             change_back = False
                             if block == 1:
@@ -346,37 +345,190 @@ class GameProcess:
                     player.move(cell.counter, choice_move)
                     break
 
-    # def adaptive_bot(self, player):
-    #     available_area = 0
-    #     our_area = 0
-    #     while our_area / (available_area / 100) < 40:
-    #         available_area = 0
-    #         our_area = 0
-    #         for dot in self.dots:
-    #             if dot.land != 0:
-    #                 available_area += 1
-    #             if dot.state == player.state:
-    #                 our_area += 1
-    #         if our_area / (available_area / 100) < 40:
-    #             for dot in self.dots:
-    #                 if dot.obj in moving_objects:
-    #                     cells = list(dfs_moves(self.dots, dot.counter))
-    #                     g = 0
-    #                     for cell in cells:
-    #                         if self.dots[cell].state != player.state and dot.defense >= self.dots[cell].defense:
-    #                             g += 1
-    #                             player.move(dot.counter, cell)
-    #                             break
-    #                     if g == 0:
-    #                         player.move(dot.counter, cells[0])
+    def adaptive_bot(self, player):
+        available_area = 0
+        our_area = 0
+        for dot in self.dots:
+            if dot.land != 0:
+                available_area += 1
+            if dot.state == player.state:
+                our_area += 1
+        if our_area / ((available_area / 100) + 0.00000000001) < 40:
+            for flag in player.flags:
+                area = bfs_group(self.dots, flag)
+                get = 0
+                spend = 0
+                for dot in area:
+                    if self.dots[dot].obj == 'knight':
+                        spend += 6
+                    if self.dots[dot].obj == 'lord':
+                        spend += 18
+                    if self.dots[dot].obj == 'peasant':
+                        spend += 2
+                    if self.dots[dot].obj != 'tree' and self.dots[dot].obj not in moving_objects:
+                        get += 1
+                    if self.dots[dot].obj == 'house':
+                        get += 4
+                    if self.dots[dot].obj in moving_objects:
+                        cells = list(dfs_moves(self.dots, dot))
+                        g = 0
+                        if flag < 78:
+                            cells.sort()
+                        else:
+                            cells.sort(reverse=True)
+                        for cell in cells:
+                            if self.dots[cell].state != player.state and \
+                                    self.dots[dot].defense >= self.dots[cell].defense:
+                                g += 1
+                                player.move(dot, cell)
+                                break
+                            elif self.dots[cell].state == player.state and self.dots[cell].obj == 'tree':
+                                g += 1
+                                player.move(dot, cell)
+                                break
 
-    # def state_land_counter(self):
-    #     self.players_area = dict.fromkeys([i.state for i in self.players], 0)
-    #     for player in self.players:
-    #         for dot in self.dots:
-    #             if dot.state == player.state:
-    #                 self.players_area[player.state] += 1
-    #         print(player.state, self.players_area[player.state])
+                        if g == 0:
+                            if flag < 78:
+                                player.move(dot, max(cells))
+                            else:
+                                player.move(dot, min(cells))
+                if get - spend >= 2:
+                    border_cells = bfs_borders(self.dots, flag)
+                    for i in range(min((get - spend) // 2, len(border_cells))):
+                        if self.dots[border_cells[i]].defense == 0:
+                            player.build('peasant', border_cells[i])
+        else:
+            for flag in player.flags:
+                area = bfs_group(self.dots, flag)
+                get = 0
+                spend = 0
+                free_area_cells = []
+                for dot in area:
+                    if self.dots[dot].obj == 'knight':
+                        spend += 6
+                    if self.dots[dot].obj == 'lord':
+                        spend += 18
+                    if self.dots[dot].obj == 'peasant':
+                        spend += 2
+                    if self.dots[dot].obj != 'tree' and self.dots[dot].obj not in moving_objects:
+                        get += 1
+                    if self.dots[dot].obj == 'house':
+                        get += 4
+                    if self.dots[dot].obj == '':
+                        free_area_cells.append(dot)
+                if 30 <= get - spend < 50:
+                    for dot in area:
+                        if self.dots[dot].obj in moving_objects:
+                            cells = list(dfs_moves(self.dots, dot))
+                            if flag < 78:
+                                cells.sort()
+                            else:
+                                cells.sort(reverse=True)
+                                for cell in cells:
+                                    if self.dots[cell].state != player.state and \
+                                            self.dots[dot].defense >= self.dots[cell].defense:
+                                        player.move(dot, cell)
+                                        break
+                                    elif self.dots[cell].state == player.state and self.dots[cell].obj == 'tree':
+                                        player.move(dot, cell)
+                                        break
+                    if flag < 78:
+                        free_area_cells.sort()
+                    else:
+                        free_area_cells.sort(reverse=True)
+                    for i in range(min((get - spend) // 12, len(free_area_cells))):
+                        player.build('house', free_area_cells[i])
+
+                elif get - spend < 30:
+                    for dot in area:
+                        if self.dots[dot].obj in moving_objects:
+                            cells = list(dfs_moves(self.dots, dot))
+                            if flag < 78:
+                                cells.sort(reverse=True)
+                            else:
+                                cells.sort()
+                            for cell in cells:
+                                if self.dots[cell].state != player.state and \
+                                        self.dots[dot].defense >= self.dots[cell].defense:
+                                    player.move(dot, cell)
+                                    break
+                                elif self.dots[cell].state == player.state and self.dots[cell].obj == 'tree':
+                                    player.move(dot, cell)
+                                    break
+                    border_cells = bfs_borders(self.dots, flag)
+                    # i = 0
+                    while border_cells:
+                        for fri in self.dots[border_cells[0]].friends:
+                            ind = 0
+                            if self.dots[fri].state == player.state:
+                                if self.dots[fri].defense != 2:
+                                    player.build('tower', fri)
+                                    ind += 1
+                                for f in self.dots[fri].friends:
+                                    if f in border_cells:
+                                        border_cells.remove(f)
+                                    elif player.state == self.dots[f].state and ind > 0:
+                                        self.dots[f].defense = 2
+                        # i += 1
+                elif 50 <= get - spend < 70:
+                    for dot in area:
+                        if self.dots[dot].obj in moving_objects:
+                            cells = list(dfs_moves(self.dots, dot))
+                            g = 0
+                            if flag < 78:
+                                cells.sort()
+                            else:
+                                cells.sort(reverse=True)
+                            for cell in cells:
+                                if self.dots[cell].state != player.state and \
+                                        self.dots[dot].defense >= self.dots[cell].defense:
+                                    g += 1
+                                    player.move(dot, cell)
+                                    break
+                                elif self.dots[cell].state == player.state and \
+                                        self.dots[cell].defense + self.dots[dot].defense <= 3:
+                                    g += 1
+                                    player.move(dot, cell)
+                                    break
+                            if g == 0:
+                                if flag < 78:
+                                    player.move(dot, choice(self.dots[dot].friends))
+                                else:
+                                    player.move(dot, choice(self.dots[dot].friends))
+                    if get - spend >= 6:
+                        border_cells = bfs_borders(self.dots, flag)
+                        for i in range(min((get - spend) // 6, len(border_cells))):
+                            player.build('knight', border_cells[i])
+
+                else:
+                    for dot in area:
+                        if self.dots[dot].obj in moving_objects:
+                            cells = list(dfs_moves(self.dots, dot))
+                            g = 0
+                            if flag < 78:
+                                cells.sort()
+                            else:
+                                cells.sort(reverse=True)
+                            for cell in cells:
+                                if self.dots[cell].state != player.state and \
+                                        self.dots[dot].defense >= self.dots[cell].defense:
+                                    g += 1
+                                    player.move(dot, cell)
+                                    break
+                                elif self.dots[cell].state == player.state and \
+                                        self.dots[cell].defense + self.dots[dot].defense <= 3:
+                                    g += 1
+                                    player.move(dot, cell)
+                                    break
+                            if g == 0:
+                                if flag < 78:
+                                    player.move(dot, choice(self.dots[dot].friends))
+                                else:
+                                    player.move(dot, choice(self.dots[dot].friends))
+                    if get - spend >= 18:
+                        border_cells = bfs_borders(self.dots, flag)
+                        for i in range(min((get - spend) // 18, len(border_cells))):
+                            player.build('lord', border_cells[i])
 
     def win_checker(self):
         self.players_area = state_counter(self.dots, self.players)
@@ -411,7 +563,10 @@ class GameProcess:
                 self.players[i].group_count()
 
             for player in self.players:
-                self.bot(player)
+                if player.state == 2:
+                    self.adaptive_bot(player)
+                elif player.state == 1:
+                    self.bot(player)
                 self.dots = set_defense(self.dots)
                 for i in player.dots:
                     i.change_object('block0')
@@ -761,6 +916,24 @@ def bfs_group(dots, start):
     return visited
 
 
+def bfs_borders(dots, start):
+    visited = []
+    queue = []
+    ret = []
+    visited.append(start)
+    queue.append(start)
+    origin = dots[start].state
+    while queue:
+        cell = queue.pop(0)
+        for neighbour in dots[cell].friends:
+            if neighbour is not False and neighbour not in visited and dots[neighbour].state == origin:
+                visited.append(neighbour)
+                queue.append(neighbour)
+            if neighbour is not False and dots[neighbour].state != origin and neighbour not in ret:
+                ret.append(neighbour)
+    return ret
+
+
 def tree_spreading(dots):
     j = randint(1, 5)
     dots_copy = copy.deepcopy(dots)
@@ -785,6 +958,8 @@ def show(dots, start, mode, dfs_list=None):
         dfs_list = dfs_moves(dots, start)
     elif mode == 'groups':
         dfs_list = bfs_group(dots, start)
+    elif mode == 'borders':
+        dfs_list = bfs_borders(dots, start)
     dots[start].color = (dots[start].color[0] + 75, dots[start].color[1] + 75, dots[start].color[2] + 75)
     if dfs_list is not None:
         for i in dfs_list:
@@ -931,7 +1106,7 @@ def game_init():
     gp = GameProcess([player1, player2], dots, analyser)
 
     starting_timer = time()
-    # show(dots, 124, 'groups')  # Визуализация работы DFS для нахождения возможных ходов для 130 клетки
+    # show(dots, 145, 'borders')  # Визуализация работы DFS для нахождения возможных ходов для 130 клетки
 
     game = True
 
