@@ -49,6 +49,7 @@ if color_cor_flag:
 
 objects = ['flag', 'house', 'lord', 'peasant', 'knight', 'tree', 'tower']
 moving_objects = ['peasant', 'knight', 'lord']
+free_to_step_objects = ['tree', '']
 static_objects = ['house', 'tree', 'tower', 'flag']
 upgrading_objects = ['peasant', 'knight']
 defense_objects = ['flag', 'tower', 'peasant', 'knight', 'lord']
@@ -199,7 +200,7 @@ class Players:
                         block = 0
                     if obj == 'peasant':
                         if ((self.money[flag] >= 10 and changed and self.dots[cell].defense <= 0) or
-                                (self.money[flag] >= 10 and not changed)):
+                                (self.money[flag] >= 10 and not changed and self.dots[cell] in free_to_step_objects)):
                             change_back = False
                             if block == 1:
                                 self.dots[cell].change_object('block1')
@@ -214,7 +215,7 @@ class Players:
                                     f" for building {obj} or another problem occurred")
                     elif obj == 'knight':
                         if (self.money[flag] >= 20 and changed and self.dots[cell].defense <= 1) or \
-                                (self.money[flag] >= 20 and not changed):
+                                (self.money[flag] >= 20 and not changed and self.dots[cell].obj in free_to_step_objects):
                             change_back = False
                             if block == 1:
                                 self.dots[cell].change_object('block1')
@@ -230,7 +231,7 @@ class Players:
                                     f" for building {obj} or another problem occurred")
                     elif obj == 'lord':
                         if (self.money[flag] >= 30 and changed) or (
-                                self.money[flag] >= 30 and not changed):
+                                self.money[flag] >= 30 and not changed and self.dots[cell].obj in free_to_step_objects):
                             change_back = False
                             if block == 1:
                                 self.dots[cell].change_object('block1')
@@ -456,7 +457,6 @@ class GameProcess:
                                     player.move(dot, cell)
                                     break
                     border_cells = bfs_borders(self.dots, flag)
-                    # i = 0
                     while border_cells:
                         for fri in self.dots[border_cells[0]].friends:
                             ind = 0
@@ -469,7 +469,6 @@ class GameProcess:
                                         border_cells.remove(f)
                                     elif player.state == self.dots[f].state and ind > 0:
                                         self.dots[f].defense = 2
-                        # i += 1
                 elif 50 <= get - spend < 70:
                     for dot in area:
                         if self.dots[dot].obj in moving_objects:
@@ -563,10 +562,11 @@ class GameProcess:
                 self.players[i].group_count()
 
             for player in self.players:
-                if player.state == 2:
-                    self.adaptive_bot(player)
-                elif player.state == 1:
-                    self.bot(player)
+                # if player.state == 2:
+                #     self.adaptive_bot(player)
+                # elif player.state == 1:
+                #     self.bot(player)
+                self.adaptive_bot(player)
                 self.dots = set_defense(self.dots)
                 for i in player.dots:
                     i.change_object('block0')
@@ -1127,11 +1127,11 @@ def game_init():
         manager.draw_ui(window)
 
         # Стресс-тест игры:
-        if stress_test_flag:
-            listw = []
-            for i in range(1, 1000):
-                for j in range(i):
-                    listw.append(j ** 10)
+        # if stress_test_flag:
+        #     listw = []
+        #     for i in range(1, 1000):
+        #         for j in range(i):
+        #             listw.append(j ** 10)
 
         ending_timer = time()
         timer = ending_timer - starting_timer
